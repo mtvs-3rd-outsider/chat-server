@@ -9,21 +9,24 @@ interface MessageRepository : CoroutineCrudRepository<Message, String> {
 
     // language=SQL
     @Query("""
-        SELECT * FROM (
-            SELECT * FROM MESSAGES
-            ORDER BY "SENT" DESC
-            LIMIT 10
-        ) ORDER BY "SENT"
-    """)
-    fun findLatest(): Flow<Message>
+SELECT * FROM (
+    SELECT * FROM MESSAGES
+    WHERE `ROOM_ID` = :roomId
+    ORDER BY `SENT` DESC
+    LIMIT 10
+) AS subquery
+ORDER BY `SENT` ASC;
+""")
+    fun findLatestAfterMessageInRoom(roomId: String): Flow<Message>
 
     // language=SQL
     @Query("""
-        SELECT * FROM (
-            SELECT * FROM MESSAGES
-            WHERE SENT > (SELECT SENT FROM MESSAGES WHERE ID = :id)
-            ORDER BY "SENT" DESC 
-        ) ORDER BY "SENT"
-    """)
-    fun findLatest(@Param("id") id: String): Flow<Message>
+SELECT * FROM (
+    SELECT * FROM MESSAGES
+    WHERE ROOM_ID = :roomId AND SENT > (SELECT SENT FROM MESSAGES WHERE ID = :id)
+    ORDER BY `SENT` DESC
+) AS subquery
+ORDER BY `SENT` ASC;
+""")
+    fun findLatestAfterMessageInRoom(@Param("id") id: Int, @Param("roomId") roomId: String): Flow<Message>
 }

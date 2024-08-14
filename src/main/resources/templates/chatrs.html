@@ -74,25 +74,7 @@
             <div class="row current-chat-area">
                 <div class="col-md-12">
                     <ul class="media-list">
-                        <li th:each="message : ${messages}" class="media">
-                            <div class="media-body">
-                                <div class="media">
-                                    <a class="pull-left" href="#">
-                                        <img class="media-object img-circle "
-                                             th:src="${message.getUser().getAvatarImageLink()}"/>
-                                    </a>
-                                    <div class="media-body" th:inline="none">
-                                        <span th:utext="${message.getContent()}" th:remove="tag">title</span>
-                                        <br/>
-                                        <small class="text-muted"
-                                               th:text="${message.getUser().getName()
-                                               + ' | '
-                                               + #temporals.format(message.getSent(), 'dd-MM-yyyy, HH:mm:ss')}"></small>
-                                        <hr/>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
+
                     </ul>
                 </div>
             </div>
@@ -105,8 +87,7 @@
         </div>
     </div>
 </div>
-<script th:inline="javascript">
-    /*<![CDATA[*/
+<script >
     var messageTemplate = _.template(
         '<li class="media">'
         + '<div class="media-body">'
@@ -134,7 +115,6 @@
             user.avatarImageLink = data.results[0].picture.large;
         }
     });
-    var lastMessageId = /*[[${lastMessageId}]]*/'';
     var mediaList = $('.media-list');
     var chatArea = $('.current-chat-area');
     var messageButton = $('.chat-input button');
@@ -159,20 +139,27 @@
 
     client.connect()
         .then(rsocket => {
-            var endpoint = "api.v1.messages.stream";
+            const roomId = "yourRoomId"; // 특정 채팅방의 roomId
+            const endpoint = `api.v1.messages.stream/${roomId}`; // roomId를 엔드포인트에 포함
 
+            // 채널을 통해 메시지를 보내는 부분
             rsocket.requestChannel(new rsocketFlowable.Flowable(source => {
                 console.log("channel")
                 source.onSubscribe({
                     cancel: () => {},
                     request: (n) => {}
-                })
+                });
                 messageButton.on("click", function() {
-                    var content = messageInput.val();
+                    const content = messageInput.val();
                     messageInput.val("");
                     if (content) {
                         source.onNext({
-                            data: Buffer.from(JSON.stringify({content: content , user: user, sent: new Date().toISOString()})),
+                            data: Buffer.from(JSON.stringify({
+                                content: content,
+                                user: user,
+                                sent: new Date().toISOString(),
+                                roomId: roomId // roomId를 메시지에 포함
+                            })),
                             metadata: rsocketCore.encodeAndAddWellKnownMetadata(
                                 Buffer.alloc(0),
                                 rsocketCore.MESSAGE_RSOCKET_ROUTING,
@@ -188,6 +175,7 @@
                     }
                 });
 
+            // 스트림을 통해 메시지를 수신하는 부분
             rsocket.requestStream({
                 metadata: rsocketCore.encodeAndAddWellKnownMetadata(
                     Buffer.alloc(0),
@@ -200,7 +188,7 @@
                         s.request(1000)
                     },
                     onNext: (e) => {
-                        var v = JSON.parse(e.data);
+                        const v = JSON.parse(e.data);
 
                         mediaList.append(messageTemplate(v));
                         chatArea.stop();
@@ -209,7 +197,7 @@
                 });
         });
 
-    /*]]>*/
+
 </script>
 </body>
 </html>
