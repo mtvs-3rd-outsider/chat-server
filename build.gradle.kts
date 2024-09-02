@@ -44,7 +44,7 @@ dependencies {
 
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.apache.kafka:kafka-clients")
-
+	implementation("io.minio:minio:8.2.0")
 	testImplementation("app.cash.turbine:turbine:1.1.0")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {

@@ -24,3 +24,8 @@ logging:
   level:
     root: INFO
     com.outsider.mop: ERROR
+minio:
+  url: ${MINIO_SERVER_URL}
+  accessKey: ${MINIO_ACCESS_KEY}
+  secretKey:  ${MINIO_PASSWORD}
+  bucketName: ${MINIO_BUCKET_NAME}
