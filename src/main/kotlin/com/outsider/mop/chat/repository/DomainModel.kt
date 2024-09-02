@@ -1,4 +1,4 @@
-package com.example.kotlin.chat.repository
+package com.outsider.mop.chat.repository
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
@@ -15,8 +15,8 @@ data class Message(
     val username: String,
     val userAvatarImageLink: String,
     @Column("room_id")
-    val roomId: String,
-    @Id var id: Int?
+    val roomId: Long,
+    @Id var id: Long?
 ) {
     val contentType: ContentType
         get() = ContentType.valueOf(contentTypeStr.uppercase(Locale.getDefault())) // 문자열을 enum으로 변환

@@ -1,4 +1,4 @@
-package com.example.kotlin.chat.controller
+package com.outsider.mop.chat.controller
 
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping

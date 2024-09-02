@@ -1,7 +1,7 @@
-package com.example.kotlin.chat.controller
+package com.outsider.mop.chat.controller
 
-import com.example.kotlin.chat.service.MessageService
-import com.example.kotlin.chat.service.MessageVM
+import com.outsider.mop.chat.service.MessageService
+import com.outsider.mop.chat.service.MessageVM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Controller
 class MessageResource(val messageService: MessageService) {
 
     @MessageMapping("stream/{roomId}")
-    suspend fun receive(@Payload inboundMessages: Flow<MessageVM>, @DestinationVariable roomId: String) =
+    suspend fun receive(@Payload inboundMessages: Flow<MessageVM>, @DestinationVariable roomId: Long) =
         messageService.post(inboundMessages.map { it.copy(roomId = roomId) })
 
     @MessageMapping("stream/{roomId}")

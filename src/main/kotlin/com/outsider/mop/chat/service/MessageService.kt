@@ -1,4 +1,4 @@
-package com.example.kotlin.chat.service
+package com.outsider.mop.chat.service
 
 import kotlinx.coroutines.flow.Flow
 

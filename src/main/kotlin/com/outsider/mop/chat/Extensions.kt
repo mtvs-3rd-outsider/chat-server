@@ -1,9 +1,9 @@
-package com.example.kotlin.chat
+package com.outsider.mop.chat
 
-import com.example.kotlin.chat.repository.ContentType
-import com.example.kotlin.chat.repository.Message
-import com.example.kotlin.chat.service.MessageVM
-import com.example.kotlin.chat.service.UserVM
+import com.outsider.mop.chat.repository.ContentType
+import com.outsider.mop.chat.repository.Message
+import com.outsider.mop.chat.service.MessageVM
+import com.outsider.mop.chat.service.UserVM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
@@ -24,7 +24,7 @@ fun MessageVM.asDomainObject(contentType: ContentType = ContentType.MARKDOWN): M
 
 fun Message.asViewModel(): MessageVM = MessageVM(
     content = contentType.render(this.content),
-    user = UserVM(this.username, URL(this.userAvatarImageLink)),
+    user = UserVM(this.username, URL(this.userAvatarImageLink).toURI() ),
     sent = this.sent,
     roomId = this.roomId, // roomId 추가
     id = this.id

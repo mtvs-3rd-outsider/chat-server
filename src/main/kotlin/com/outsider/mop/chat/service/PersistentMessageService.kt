@@ -1,9 +1,9 @@
-package com.example.kotlin.chat.service
+package com.outsider.mop.chat.service
 
-import com.example.kotlin.chat.asDomainObject
-import com.example.kotlin.chat.asRendered
-import com.example.kotlin.chat.mapToViewModel
-import com.example.kotlin.chat.repository.MessageRepository
+import com.outsider.mop.chat.asDomainObject
+import com.outsider.mop.chat.asRendered
+import com.outsider.mop.chat.mapToViewModel
+import com.outsider.mop.chat.repository.MessageRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map

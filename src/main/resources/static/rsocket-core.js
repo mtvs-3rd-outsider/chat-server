@@ -1631,16 +1631,16 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
    */
 
   class Lease {
-    constructor(timeToLiveMillis, allowedRequests, metadata) {
-      invariant_1(timeToLiveMillis > 0, 'Lease time-to-live must be positive');
+    constructor(timeToLiveMINUTES, allowedRequests, metadata) {
+      invariant_1(timeToLiveMINUTES > 0, 'Lease time-to-live must be positive');
       invariant_1(
         allowedRequests > 0,
         'Lease allowed requests must be positive'
       );
-      this.timeToLiveMillis = timeToLiveMillis;
+      this.timeToLiveMINUTES = timeToLiveMINUTES;
       this.allowedRequests = allowedRequests;
       this.startingAllowedRequests = allowedRequests;
-      this.expiry = Date.now() + timeToLiveMillis;
+      this.expiry = Date.now() + timeToLiveMINUTES;
       this.metadata = metadata;
     }
 
@@ -1739,10 +1739,10 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
 
     receive(frame) {
       if (!this.isDisposed()) {
-        const timeToLiveMillis = frame.ttl;
+        const timeToLiveMINUTES = frame.ttl;
         const requestCount = frame.requestCount;
         const metadata = frame.metadata;
-        this._onLease(new Lease(timeToLiveMillis, requestCount, metadata));
+        this._onLease(new Lease(timeToLiveMINUTES, requestCount, metadata));
       }
     }
 
@@ -2110,13 +2110,13 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
           subscription.request(Number.MAX_SAFE_INTEGER),
       });
       const MIN_TICK_DURATION = 100;
-      this._keepAliveLastReceivedMillis = Date.now();
+      this._keepAliveLastReceivedMINUTES = Date.now();
       const keepAliveHandler = () => {
         const now = Date.now();
-        const noKeepAliveDuration = now - this._keepAliveLastReceivedMillis;
+        const noKeepAliveDuration = now - this._keepAliveLastReceivedMINUTES;
         if (noKeepAliveDuration >= keepAliveTimeout) {
           this._handleConnectionError(
-            new Error(`No keep-alive acks for ${keepAliveTimeout} millis`)
+            new Error(`No keep-alive acks for ${keepAliveTimeout} MINUTES`)
           );
         } else {
           this._keepAliveTimerHandle = setTimeout(
@@ -2366,7 +2366,7 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
           metadata: lease.metadata,
           requestCount: lease.allowedRequests,
           streamId: CONNECTION_STREAM_ID,
-          ttl: lease.timeToLiveMillis,
+          ttl: lease.timeToLiveMINUTES,
           type: FRAME_TYPES.LEASE,
         });
     }
@@ -2412,7 +2412,7 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
           // Extensions are not supported
           break;
         case FRAME_TYPES.KEEPALIVE:
-          this._keepAliveLastReceivedMillis = Date.now();
+          this._keepAliveLastReceivedMINUTES = Date.now();
           if (isRespond(frame.flags)) {
             this._connection.sendOne(
               _objectSpread2(
@@ -4580,7 +4580,7 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
       this._receiveSubscription = null;
       this._receivers = new Set();
       this._resumeToken = options.resumeToken;
-      this._sessionTimeoutMillis = options.sessionDurationSeconds * 1000;
+      this._sessionTimeoutMINUTES = options.sessionDurationSeconds * 1000;
       this._sessionTimeoutHandle = null;
       this._senders = new Set();
       this._sentFrames = [];
@@ -4632,7 +4632,7 @@ var rsocketCore = (function (exports, rsocketFlowable, rsocketTypes) {
               if (!this._sessionTimeoutHandle) {
                 this._sessionTimeoutHandle = setTimeout(
                   () => this._close(this._resumeTimeoutError()),
-                  this._sessionTimeoutMillis
+                  this._sessionTimeoutMINUTES
                 );
               }
               this._disconnect();

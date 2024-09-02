@@ -1,4 +1,4 @@
-package com.example.kotlin;
+package com.outsider.mop;
 
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
 @Configuration
-public class R2DBCConfiguration   {
+public class R2DBCConfiguration {
     @Bean
     public ConnectionFactory connectionFactory() {
         ConnectionFactory connectionFactory = ConnectionFactories.get(ConnectionFactoryOptions.builder()
@@ -17,7 +17,7 @@ public class R2DBCConfiguration   {
                 .option(HOST, "localhost")
                 .option(USER, "root")
                 .option(PASSWORD, "1234")
-                .option(PORT, 3306)
+                .option(PORT, 9876)
                 .option(DATABASE, "forcasthub")
                 .build());
         return connectionFactory;

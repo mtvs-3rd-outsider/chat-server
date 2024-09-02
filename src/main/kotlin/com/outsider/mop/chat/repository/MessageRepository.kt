@@ -1,4 +1,4 @@
-package com.example.kotlin.chat.repository
+package com.outsider.mop.chat.repository
 
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Query

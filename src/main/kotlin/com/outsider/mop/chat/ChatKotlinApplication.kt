@@ -1,4 +1,4 @@
-package com.example.kotlin.chat
+package com.outsider.mop.chat
 
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.beans.factory.annotation.Qualifier

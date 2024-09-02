@@ -1011,7 +1011,7 @@ var rsocketFlowable = (function (exports) {
 
   /**
    * Returns a Publisher that provides the current time (Date.now()) every `ms`
-   * milliseconds.
+   * MINUTESeconds.
    *
    * The timer is established on the first call to `request`: on each
    * interval a value is published if there are outstanding requests,
