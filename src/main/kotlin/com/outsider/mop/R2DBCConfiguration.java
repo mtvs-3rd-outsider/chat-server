@@ -18,7 +18,7 @@ public class R2DBCConfiguration {
                 .option(USER, "root")
                 .option(PASSWORD, "1234")
                 .option(PORT, 9876)
-                .option(DATABASE, "forcasthub")
+                .option(DATABASE, "forecasthub")
                 .build());
         return connectionFactory;
     }
