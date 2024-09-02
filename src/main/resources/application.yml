@@ -1,9 +1,26 @@
 spring:
+  kafka:
+    bootstrap-servers: localhost:9093
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+#      group-id: data-processing
+      group-id: test-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   data:
     mongodb:
-      uri: mongodb://ohgiraffers:ohgiraffers@localhost:10001/forecasthub
+      uri: mongodb://ohgiraffers:ohgiraffers@localhost:10001/forecasthub?authSource=admin
 springdoc:
   swagger-ui:
     path: /swagger-ui.html  # Swagger UI에 접근할 수 있는 경로 설정
   api-docs:
-    path: /v3/api-docs      # OpenAPI 문서에 접근할 수 있는 경로 설정
+    path: /v3/api-docs
+logging:
+  file:
+    name: application.log
+  level:
+    root: INFO
+    com.outsider.mop: ERROR
