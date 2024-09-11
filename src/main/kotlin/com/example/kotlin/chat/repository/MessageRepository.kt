@@ -17,7 +17,7 @@ SELECT * FROM (
 ) AS subquery
 ORDER BY `SENT` ASC;
 """)
-    fun findLatestAfterMessageInRoom(roomId: String): Flow<Message>
+    fun findLatestAfterMessageInRoom(roomId: Int): Flow<Message>
 
     // language=SQL
     @Query("""
@@ -28,5 +28,5 @@ SELECT * FROM (
 ) AS subquery
 ORDER BY `SENT` ASC;
 """)
-    fun findLatestAfterMessageInRoom(@Param("id") id: Int, @Param("roomId") roomId: String): Flow<Message>
+    fun findLatestAfterMessageInRoom(@Param("id") id: Int, @Param("roomId") roomId: Int): Flow<Message>
 }

@@ -15,7 +15,7 @@ data class Message(
     val username: String,
     val userAvatarImageLink: String,
     @Column("room_id")
-    val roomId: String,
+    val roomId: Int,
     @Id var id: Int?
 ) {
     val contentType: ContentType

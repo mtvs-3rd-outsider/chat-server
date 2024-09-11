@@ -125,7 +125,7 @@
     const client = new rsocketCore.RSocketClient({
         transport: new rsocketWebSocketClient(
             {
-                url: 'ws://localhost:8080/rsocket',
+                url: 'ws://localhost:7000/rsocket',
             },
             rsocketCore.BufferEncoders,
         ),
@@ -139,7 +139,7 @@
 
     client.connect()
         .then(rsocket => {
-            const roomId = "yourRoomId"; // 특정 채팅방의 roomId
+            const roomId = 1; // 특정 채팅방의 roomId
             const endpoint = `api.v1.messages.stream/${roomId}`; // roomId를 엔드포인트에 포함
 
             // 채널을 통해 메시지를 보내는 부분

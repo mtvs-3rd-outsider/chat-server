@@ -16,11 +16,11 @@ import org.springframework.stereotype.Controller
 class MessageResource(val messageService: MessageService) {
 
     @MessageMapping("stream/{roomId}")
-    suspend fun receive(@Payload inboundMessages: Flow<MessageVM>, @DestinationVariable roomId: String) =
+    suspend fun receive(@Payload inboundMessages: Flow<MessageVM>, @DestinationVariable roomId: Int) =
         messageService.post(inboundMessages.map { it.copy(roomId = roomId) })
 
     @MessageMapping("stream/{roomId}")
-    fun send(@DestinationVariable roomId: String): Flow<MessageVM> = messageService
+    fun send(@DestinationVariable roomId: Int): Flow<MessageVM> = messageService
         .stream()
         .onStart {
             emitAll(messageService.latest(roomId))

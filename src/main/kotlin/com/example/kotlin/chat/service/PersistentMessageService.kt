@@ -17,12 +17,12 @@ class PersistentMessageService(val messageRepository: MessageRepository) : Messa
     val sender: MutableSharedFlow<MessageVM> = MutableSharedFlow()
 
     // 특정 채팅방의 최신 메시지 가져오기
-    override fun latest(roomId: String): Flow<MessageVM> =
+    override fun latest(roomId: Int): Flow<MessageVM> =
         messageRepository.findLatestAfterMessageInRoom(roomId)
             .mapToViewModel()
 
     // 특정 메시지 이후의 메시지 가져오기
-    override fun after(messageId: Int, roomId: String): Flow<MessageVM> =
+    override fun after(messageId: Int, roomId: Int): Flow<MessageVM> =
         messageRepository.findLatestAfterMessageInRoom(messageId, roomId)
             .mapToViewModel()
 

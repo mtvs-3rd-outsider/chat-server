@@ -7,7 +7,7 @@ data class MessageVM(
     val content: String,
     val user: UserVM,
     val sent: Instant,
-    val roomId: String,  // roomId 추가
+    val roomId: Int,  // roomId 추가
     val id: Int? = null
 )
 
