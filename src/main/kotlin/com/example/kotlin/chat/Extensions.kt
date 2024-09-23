@@ -24,7 +24,7 @@ fun MessageVM.asDomainObject(contentType: ContentType = ContentType.MARKDOWN): M
 
 fun Message.asViewModel(): MessageVM = MessageVM(
     content = contentType.render(this.content),
-    user = UserVM(this.username, URL(this.userAvatarImageLink)),
+    user = UserVM(this.username, this.userAvatarImageLink),
     sent = this.sent,
     roomId = this.roomId, // roomId 추가
     id = this.id
@@ -38,7 +38,6 @@ fun Flow<Message>.mapToViewModel(): Flow<MessageVM> = map { it.asViewModel() }
 fun ContentType.render(content: String): String = when (this) {
     ContentType.PLAIN -> content
     ContentType.MARKDOWN -> {
-        val flavour = CommonMarkFlavourDescriptor()
-        HtmlGenerator(content, MarkdownParser(flavour).buildMarkdownTreeFromString(content), flavour).generateHtml()
+        content
     }
 }

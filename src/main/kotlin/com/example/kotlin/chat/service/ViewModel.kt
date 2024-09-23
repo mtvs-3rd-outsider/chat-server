@@ -13,5 +13,5 @@ data class MessageVM(
 
 data class UserVM(
     val name: String,
-    val avatarImageLink: URL
+    val avatarImageLink: String
 )
