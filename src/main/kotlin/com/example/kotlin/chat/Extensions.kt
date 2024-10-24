@@ -2,14 +2,11 @@ package com.example.kotlin.chat
 
 import com.example.kotlin.chat.repository.ContentType
 import com.example.kotlin.chat.repository.Message
-import com.example.kotlin.chat.service.MessageVM
-import com.example.kotlin.chat.service.UserVM
+import com.example.kotlin.chat.repository.MessageReaction
+import com.example.kotlin.chat.service.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
-import org.intellij.markdown.html.HtmlGenerator
-import org.intellij.markdown.parser.MarkdownParser
-import java.net.URL
+import java.time.Instant
 import java.util.*
 
 fun MessageVM.asDomainObject(contentType: ContentType = ContentType.MARKDOWN): Message = Message(
@@ -19,15 +16,19 @@ fun MessageVM.asDomainObject(contentType: ContentType = ContentType.MARKDOWN): M
     username = this.user.name,
     userAvatarImageLink = this.user.avatarImageLink.toString(),
     roomId = this.roomId, // roomId 추가
-    id = this.id
+    id = this.id,
+    userId = this.user.id,
+    replyToMessageId = this.replyToMessageId
 )
 
 fun Message.asViewModel(): MessageVM = MessageVM(
     content = contentType.render(this.content),
-    user = UserVM(this.username, this.userAvatarImageLink),
+    user = UserVM(this.username, this.userAvatarImageLink,userId),
     sent = this.sent,
     roomId = this.roomId, // roomId 추가
-    id = this.id
+    id = this.id,
+    replyToMessageId = this.replyToMessageId,
+    contentType = contentTypeStr
 )
 
 fun MessageVM.asRendered(contentType: ContentType = ContentType.MARKDOWN): MessageVM =
@@ -40,4 +41,32 @@ fun ContentType.render(content: String): String = when (this) {
     ContentType.MARKDOWN -> {
         content
     }
+    ContentType.FEED -> content
+    ContentType.IMAGE -> content
+    ContentType.VIDEO -> content
+}
+fun MessageReaction.toViewModel(): MessageReactionVM {
+    return MessageReactionVM(
+        id = this.id,
+        messageId = this.messageId,
+        userId = this.userId,
+        reactionType = this.reactionType
+    )
+}
+fun Message.toViewModel(reactions: List<MessageReactionVM>): MessageWithReactionVM {
+    return MessageWithReactionVM(
+        id = this.id,
+        content = this.content,
+        sent = this.sent.toString(),
+        roomId = this.roomId,
+        reactions = reactions // reactions 리스트 추가
+    )
+}
+fun MessageReactionVM.toDomainObject(): MessageReaction {
+    return MessageReaction(
+        id = this.id,
+        messageId = this.messageId,
+        userId = this.userId,
+        reactionType = this.reactionType
+    )
 }

@@ -14,26 +14,34 @@ import org.springframework.stereotype.Service
 @Service
 class PersistentMessageService(val messageRepository: MessageRepository) : MessageService {
 
-    val sender: MutableSharedFlow<MessageVM> = MutableSharedFlow()
-
+    private val roomStreams: MutableMap<String, MutableSharedFlow<MessageVM>> = mutableMapOf()
     // 특정 채팅방의 최신 메시지 가져오기
-    override fun latest(roomId: Int): Flow<MessageVM> =
+    override fun latest(roomId: String): Flow<MessageVM> =
         messageRepository.findLatestAfterMessageInRoom(roomId)
             .mapToViewModel()
 
     // 특정 메시지 이후의 메시지 가져오기
-    override fun after(messageId: Int, roomId: Int): Flow<MessageVM> =
+    override fun after(messageId: Int, roomId: String): Flow<MessageVM> =
         messageRepository.findLatestAfterMessageInRoom(messageId, roomId)
             .mapToViewModel()
 
     // 실시간 메시지 스트림
-    override fun stream(): Flow<MessageVM> = sender
-
+    override fun stream(roomId: String): Flow<MessageVM> {
+        return getOrCreateStream(roomId)
+    }
+    private fun getOrCreateStream(roomId: String): MutableSharedFlow<MessageVM> {
+        return roomStreams.getOrPut(roomId) { MutableSharedFlow() }
+    }
     // 메시지 전송
-    override suspend fun post(messages: Flow<MessageVM>) =
+    // 메시지 전송 (roomId별로 메시지를 전송하고 해당 스트림에 emit)
+    override suspend fun post(messages: Flow<MessageVM>) {
         messages
-            .onEach { sender.emit(it.asRendered()) }
+            .onEach { message ->
+                val roomId = message.roomId // 각 메시지의 roomId를 사용하여 스트림을 선택
+                getOrCreateStream(roomId).emit(message.asRendered()) // 해당 roomId의 스트림에 메시지 전송
+            }
             .map { it.asDomainObject() }
             .let { messageRepository.saveAll(it) }
             .collect()
+    }
 }

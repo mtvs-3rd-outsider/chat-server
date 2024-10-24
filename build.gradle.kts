@@ -29,7 +29,8 @@ dependencies {
 	implementation("com.github.javafaker:javafaker:1.0.2")
 // https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
 	implementation("io.asyncer:r2dbc-mysql:1.2.0")
-
+	implementation("io.github.cdimascio:java-dotenv:5.2.2")
+// https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv
 
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

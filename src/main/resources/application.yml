@@ -1,0 +1,39 @@
+server:
+  port: 7000
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: tomcat
+    enabled: ${SSL_ENABLE}
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  rsocket:
+    server:
+      transport: websocket
+      mapping-path: https://master-of-prediction.shop:7000/rsocket
+      ssl:
+        key-store: classpath:keystore.p12
+        key-store-password: 1234
+        enabled: true
+        key-alias: tomcat
+        key-store-type: PKCS12
+      port: 7001
+
+  r2dbc:
+    url: r2dbc:mysql://localhost:9876/forecasthub
+    username: root
+    password: 1234
+
+
+logging:
+  level:
+    org:
+      springframework:
+        r2dbc: DEBUG
+      rsocket: DEBUG
+
+    io:
+      r2dbc: TRACE
+      rsocket: DEBUG
