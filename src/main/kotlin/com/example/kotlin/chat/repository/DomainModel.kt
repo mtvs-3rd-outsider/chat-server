@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 
 @Table("MESSAGES")
@@ -20,7 +21,7 @@ data class Message(
     val roomId: String,
     @Id var id: Int?,
     @Column("reply_to_message_id")
-    val replyToMessageId: Int?, // 원본 메시지에 대한 참조
+    val replyToMessageId: String?, // 원본 메시지에 대한 참조
     // 반응 리스트 추가
 ) {
     val contentType: ContentType
@@ -30,13 +31,6 @@ data class Message(
 enum class ContentType {
     PLAIN, MARKDOWN , IMAGE, VIDEO , FEED
 }
-@Table("MESSAGE_REACTIONS")
-data class MessageReaction(
-    @Id val id: Int?,
-    @Column("message_id")
-    val messageId: Int,
-    @Column("user_id")
-    val userId: String,
-    @Column("reaction_type")
-    val reactionType: String // 예: "like", "heart", "thumbs_up"
-)
+
+
+

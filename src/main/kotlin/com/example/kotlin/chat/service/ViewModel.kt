@@ -1,9 +1,7 @@
 package com.example.kotlin.chat.service
 
-import com.example.kotlin.chat.repository.Message
-import com.example.kotlin.chat.repository.MessageReaction
-import java.net.URL
 import java.time.Instant
+import java.time.LocalDateTime
 
 data class MessageVM(
     val content: String,
@@ -11,7 +9,7 @@ data class MessageVM(
     val sent: Instant,
     val roomId: String,  // roomId 추가
     val id: Int? = null,
-    val replyToMessageId: Int? = null,
+    val replyToMessageId: String? = null,
     val contentType: String
 )
 
@@ -26,17 +24,34 @@ data class MessageReactionVM(
     val id: Int?,
     val messageId: Int,
     val userId: String,
-    val reactionType: String // 예: "like", "heart", "thumbs_up"
+    val reactionType: String, // 예: "like", "heart", "thumbs_up"
+    val roomId: String,
+    val isPlus: Boolean
 )
 
-data class MessageWithReactionVM(
-    val id: Int?,
-    val content: String,
-    val sent: String,
+data class RoomInfoVM(
     val roomId: String,
-    val reactions: List<MessageReactionVM>
+    val roomName: String,
+    val lastMessage: String,
+    val lastMessageTime: LocalDateTime,
+    val unreadMessageCount: Int  // 읽지 않은 메시지 개수
 )
-data class MessageWithReaction(
-    val message: Message,
-    val reaction: MessageReaction? // LEFT JOIN이라서 반응이 없을 수도 있으므로 null 가능성 처리
+data class TotalUnreadMessageCountVM(
+    val unreadMessageCount: Int  // 읽지 않은 메시지 개수
+)
+data class UserLastReadTimeVM(
+    val userId: String,
+    val lastReadableTime: Instant,
+    val roomId: String,
+)
+
+
+data class UserStatusVM(
+    val userId: String,
+    val isOnline: Boolean
+)
+
+data class UserStatusUpdateVM(
+    val userId: String,
+    val isOnline: Boolean
 )

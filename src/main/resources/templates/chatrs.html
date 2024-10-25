@@ -125,7 +125,7 @@
     const client = new rsocketCore.RSocketClient({
         transport: new rsocketWebSocketClient(
             {
-                url: 'ws://localhost:7000/rsocket',
+                url: 'wss://localhost:7000/rsocket',
             },
             rsocketCore.BufferEncoders,
         ),

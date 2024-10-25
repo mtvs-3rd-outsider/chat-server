@@ -39,17 +39,26 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
 	implementation("com.mysql:mysql-connector-j:8.3.0")
-
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("app.cash.turbine:turbine:0.4.1")
 
 	runtimeOnly("com.h2database:h2")
-
+	implementation("org.springframework.kafka:spring-kafka")
+	implementation("org.apache.kafka:kafka-clients")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive:3.3.4")
 	implementation("org.jetbrains:markdown:0.2.2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
-
+	// Spring Security와 RSocket 통합
+//	implementation("org.springframework.boot:spring-boot-starter-security")
+//	implementation("org.springframework.security:spring-security-messaging")
+	implementation("org.springframework.security:spring-security-rsocket")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	// JWT를 사용하려면 다음 의존성 추가
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리
 }
 
 tasks.withType<Test> {

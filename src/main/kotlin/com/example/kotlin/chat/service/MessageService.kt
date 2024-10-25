@@ -16,6 +16,5 @@ interface MessageService {
 
     // 메시지를 게시 (저장하고 실시간 스트림에 전송)
     suspend fun post(messages: Flow<MessageVM>)
-
 }
 

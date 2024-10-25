@@ -19,13 +19,17 @@ spring:
         enabled: true
         key-alias: tomcat
         key-store-type: PKCS12
-      port: 7001
 
   r2dbc:
     url: r2dbc:mysql://localhost:9876/forecasthub
     username: root
     password: 1234
 
+  main:
+    allow-bean-definition-overriding: true
+jwt:
+  expiration_time: 86400000 #1일
+  secret: ${JWT_SECRET}
 
 logging:
   level:
@@ -33,7 +37,10 @@ logging:
       springframework:
         r2dbc: DEBUG
       rsocket: DEBUG
-
+    org.springframework.security: DEBUG
+    org.springframework.messaging.rsocket: DEBUG
+    org.springframework.security.rsocket: DEBUG  # RSocket Security 전용 디버깅
+    io.rsocket: DEBUG
     io:
       r2dbc: TRACE
       rsocket: DEBUG

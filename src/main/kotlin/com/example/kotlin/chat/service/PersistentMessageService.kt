@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.collect
 import org.springframework.stereotype.Service
 
 @Service
-class PersistentMessageService(val messageRepository: MessageRepository) : MessageService {
+class PersistentMessageService(
+    val messageRepository: MessageRepository,
+) : MessageService {
 
     private val roomStreams: MutableMap<String, MutableSharedFlow<MessageVM>> = mutableMapOf()
     // 특정 채팅방의 최신 메시지 가져오기
@@ -44,4 +46,6 @@ class PersistentMessageService(val messageRepository: MessageRepository) : Messa
             .let { messageRepository.saveAll(it) }
             .collect()
     }
+
+
 }

@@ -45,28 +45,24 @@ fun ContentType.render(content: String): String = when (this) {
     ContentType.IMAGE -> content
     ContentType.VIDEO -> content
 }
-fun MessageReaction.toViewModel(): MessageReactionVM {
-    return MessageReactionVM(
-        id = this.id,
-        messageId = this.messageId,
-        userId = this.userId,
-        reactionType = this.reactionType
-    )
-}
-fun Message.toViewModel(reactions: List<MessageReactionVM>): MessageWithReactionVM {
-    return MessageWithReactionVM(
-        id = this.id,
-        content = this.content,
-        sent = this.sent.toString(),
-        roomId = this.roomId,
-        reactions = reactions // reactions 리스트 추가
-    )
-}
+//fun MessageReaction.toViewModel(): MessageReactionVM {
+//    return MessageReactionVM(
+//        id = this.id,
+//        messageId = this.messageId,
+//        userId = this.userId,
+//        reactionType = this.reactionType,
+//        roomId = this.roomId
+//
+//    )
+//}
+
 fun MessageReactionVM.toDomainObject(): MessageReaction {
     return MessageReaction(
         id = this.id,
         messageId = this.messageId,
         userId = this.userId,
-        reactionType = this.reactionType
+        reactionType = this.reactionType,
+        roomId = this.roomId,
     )
 }
+
