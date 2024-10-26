@@ -41,6 +41,7 @@ class MessageThreadListInfoService(
             emit(roomInfoList) // List<RoomInfoVM>를 Flow로 방출
         }
     }
+
     // 메시지가 도착했을 때 DB를 참고하지 않고 SharedFlow에서 최신 방 정보를 업데이트하는 메서드
     override suspend fun post(inboundMessages: Flow<MessageVM>) {
         inboundMessages.collect { message ->

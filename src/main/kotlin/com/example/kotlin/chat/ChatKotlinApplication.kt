@@ -10,11 +10,17 @@ import org.springframework.core.io.ClassPathResource
 import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
+import reactor.core.publisher.Hooks
+import java.lang.management.ManagementFactory
 
 @SpringBootApplication
 class ChatKotlinApplication
 
 fun main(args: Array<String>) {
+	ManagementFactory.getRuntimeMXBean()
+		.getInputArguments()
+		.forEach(System.out::println);
+	Hooks.onOperatorDebug();
 	runApplication<ChatKotlinApplication>(*args)
 }
 

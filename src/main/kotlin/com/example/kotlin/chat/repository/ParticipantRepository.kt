@@ -12,4 +12,7 @@ interface ParticipantRepository : CoroutineCrudRepository<Participant, Long> {
 
     // 특정 userId에 해당하는 모든 방의 정보를 조회
     fun findByUserId(userId: Long): Flow<Participant>
+
+    // userId와 threadId를 사용하여 Participant 엔티티를 찾는 메서드
+    suspend  fun findByUserIdAndThreadId(userId: Long, threadId: Long): Participant?
 }

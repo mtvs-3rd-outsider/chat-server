@@ -37,6 +37,7 @@ data class RoomInfoVM(
     val unreadMessageCount: Int  // 읽지 않은 메시지 개수
 )
 data class TotalUnreadMessageCountVM(
+    val userId: String, // 추가한 필드
     val unreadMessageCount: Int  // 읽지 않은 메시지 개수
 )
 data class UserLastReadTimeVM(

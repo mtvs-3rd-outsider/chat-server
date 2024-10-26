@@ -9,11 +9,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.collect
+import org.springframework.context.annotation.Profile
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Service
 
 @Service
+@Profile("no_redis")
 class PersistentMessageService(
-    val messageRepository: MessageRepository,
+    val messageRepository: MessageRepository
 ) : MessageService {
 
     private val roomStreams: MutableMap<String, MutableSharedFlow<MessageVM>> = mutableMapOf()

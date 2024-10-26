@@ -7,6 +7,15 @@ server:
     key-alias: tomcat
     enabled: ${SSL_ENABLE}
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8085/realms/myrealm
+          jwk-set-uri: http://localhost:8085/realms/myrealm/protocol/openid-connect/certs
+  reactor:
+    debug-agent:
+      enabled: true
   config:
     import: optional:file:.env[.properties]
   rsocket:
@@ -41,6 +50,8 @@ logging:
     org.springframework.messaging.rsocket: DEBUG
     org.springframework.security.rsocket: DEBUG  # RSocket Security 전용 디버깅
     io.rsocket: DEBUG
-    io:
-      r2dbc: TRACE
-      rsocket: DEBUG
+#      r2dbc: TRACE
+    org.springframework.data.redis: DEBUG  # Spring Data Redis 로깅 레벨
+    io.lettuce.core: DEBUG                 # Redis 클라이언트 Lettuce의 로깅 레벨
+    org.springframework.web: DEBUG         # 웹 요청 관련 디버그 (선택 사항)
+    root: INFO

@@ -20,7 +20,7 @@ data class Participant(
     @Column("is_online")
     var isOnline: Boolean = false,  // 사용자의 온라인 여부
     @Column("last_read_time")
-    private var lastReadTime: LocalDateTime? = null,
+    var lastReadTime: LocalDateTime? = null,
 
     @Column("unread_message_count")
     var unreadMessageCount: Int = 0  // 읽지 않은 메시지 수

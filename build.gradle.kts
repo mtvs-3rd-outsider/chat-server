@@ -31,7 +31,7 @@ dependencies {
 	implementation("io.asyncer:r2dbc-mysql:1.2.0")
 	implementation("io.github.cdimascio:java-dotenv:5.2.2")
 // https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv
-
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
@@ -41,7 +41,8 @@ dependencies {
 	implementation("com.mysql:mysql-connector-j:8.3.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("app.cash.turbine:turbine:0.4.1")
-
+// https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-resource-server
+//	implementation("org.springframework.security:spring-security-oauth2-resource-server:6.3.4")
 	runtimeOnly("com.h2database:h2")
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.apache.kafka:kafka-clients")
@@ -51,14 +52,19 @@ dependencies {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	// Spring Security와 RSocket 통합
-//	implementation("org.springframework.boot:spring-boot-starter-security")
-//	implementation("org.springframework.security:spring-security-messaging")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.security:spring-security-messaging")
 	implementation("org.springframework.security:spring-security-rsocket")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	// https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose
+	implementation("org.springframework.security:spring-security-oauth2-jose:6.3.3")
+
 	// JWT를 사용하려면 다음 의존성 추가
 	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리
+	// https://mvnrepository.com/artifact/io.projectreactor/reactor-tools
+	implementation("io.projectreactor:reactor-tools:3.6.11")
 }
 
 tasks.withType<Test> {

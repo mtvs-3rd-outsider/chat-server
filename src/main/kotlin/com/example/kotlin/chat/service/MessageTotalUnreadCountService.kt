@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class MessageTotalUnreadCountService(
-    private val participantRepository: ParticipantRepository,
-    private val userStatusService: UserStatusService  // UserStatusService 주입
+    private val participantRepository: ParticipantRepository
 ) : RealtimeEventService<TotalUnreadMessageCountVM,MessageVM> {
     // 각 사용자에 대한 총 읽지 않은 메시지 개수를 관리하는 SharedFlow
     private val unreadCountStreams: MutableMap<String, MutableSharedFlow<TotalUnreadMessageCountVM>> = mutableMapOf()
@@ -35,7 +34,7 @@ class MessageTotalUnreadCountService(
             .sum() // 각 참여자의 읽지 않은 메시지 수 합산
 
         return flow {
-            emit(TotalUnreadMessageCountVM(unreadMessageCount = totalUnreadCount)) // 총 읽지 않은 메시지 개수를 방출
+            emit(TotalUnreadMessageCountVM(userId = userId,unreadMessageCount = totalUnreadCount)) // 총 읽지 않은 메시지 개수를 방출
         }
     }
 
@@ -56,7 +55,7 @@ class MessageTotalUnreadCountService(
                 val updatedUnreadCount = currentUnreadCount + 1
 
                 // 업데이트된 총 읽지 않은 메시지 수 방출
-                getOrCreateStream(userId).emit(TotalUnreadMessageCountVM(unreadMessageCount = updatedUnreadCount))
+                getOrCreateStream(userId).emit(TotalUnreadMessageCountVM(userId = userId, unreadMessageCount = updatedUnreadCount))
             }
         }
     }

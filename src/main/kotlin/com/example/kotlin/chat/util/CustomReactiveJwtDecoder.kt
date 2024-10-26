@@ -15,6 +15,7 @@ class CustomReactiveJwtDecoder(secretKey: String) : ReactiveJwtDecoder {
     private val key: Key
 
     init {
+        println("Initializing CustomReactiveJwtDecoder with secret key")
         val keyBytes = Decoders.BASE64.decode(secretKey)
         this.key = Keys.hmacShaKeyFor(keyBytes)
     }
@@ -22,13 +23,20 @@ class CustomReactiveJwtDecoder(secretKey: String) : ReactiveJwtDecoder {
     override fun decode(token: String): Mono<Jwt> {
         return Mono.fromCallable {
             try {
-                println("TEST") // 디코더가 호출될 때 출력
+                println("Attempting to decode JWT token: $token")
+
+                // JWT 파싱 및 검증
                 val claimsJws = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
 
+                println("JWT token successfully parsed. Extracting claims...")
+
                 val body: Claims = claimsJws.body
+
+                println("JWT claims: $body")
+                println("JWT headers: ${claimsJws.header}")
 
                 Jwt(
                     token,
@@ -36,14 +44,16 @@ class CustomReactiveJwtDecoder(secretKey: String) : ReactiveJwtDecoder {
                     body.expiration.toInstant(),
                     claimsJws.header,
                     body
-                )
+                ).also {
+                    println("JWT object created successfully: $it")
+                }
             } catch (e: Exception) {
-                throw JwtException("Invalid JWT token", e) // 예외 변환
+                println("Failed to decode JWT token: ${e.message}")
+                throw JwtException("Invalid JWT token", e)
             }
         }
     }
 }
-
 
 //package com.example.kotlin.chat.util
 //
