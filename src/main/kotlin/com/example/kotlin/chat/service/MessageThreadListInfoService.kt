@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.*
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-@Service
+//@Service
 class MessageThreadListInfoService(
     private val chatThreadRepository: ChatThreadRepository,
     private val participantRepository: ParticipantRepository,
@@ -35,7 +35,8 @@ class MessageThreadListInfoService(
                     roomName = "Room ${chatThread?.chatRoomId}", // 방 이름
                     lastMessage = chatThread?.lastMessage ?: "No message",
                     lastMessageTime = chatThread?.lastMessageTime ?: LocalDateTime.now(),
-                    unreadMessageCount = participant.unreadMessageCount
+                    unreadMessageCount = participant.unreadMessageCount,
+                    userId = id
                 )
             }.toList() // Flow<RoomInfoVM>를 List<RoomInfoVM>로 변환
             emit(roomInfoList) // List<RoomInfoVM>를 Flow로 방출

@@ -29,7 +29,7 @@ class SecurityConfig(@Value("\${jwt.secret}") private val secretKey: String ) {
             authorize
                 .setup().authenticated()
                 .anyRequest().authenticated()
-                .anyExchange().permitAll()
+                .anyExchange().authenticated()
         } // all connections, exchanges.
             .jwt(withDefaults())
         return security.build()

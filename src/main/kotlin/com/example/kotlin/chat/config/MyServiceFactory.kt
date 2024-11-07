@@ -32,21 +32,28 @@ class MyServiceFactory {
         participantRepository: ParticipantRepository,
         redisTemplate: ReactiveRedisTemplate<String, String>,
         listenerContainer: ReactiveRedisMessageListenerContainer,
+        userStatusService: UserStatusService,
         objectMapper: ObjectMapper,
         @Qualifier("threadListInfo") messageTopic: ChannelTopic
-    ): RealtimeEventService<List<RoomInfoVM>, MessageVM> {
+    ): RealtimeEventService<Map<String, RoomInfoVM>, MessageVM> {
         return RedisMessageThreadListInfoService(
             chatThreadRepository,
             participantRepository,
             redisTemplate,
             listenerContainer,
             objectMapper,
+            userStatusService,
             messageTopic
         )
     }
     @Bean
-    fun userStatusService(participantRepository: ParticipantRepository, redisTemplate: ReactiveRedisTemplate<String, Boolean>): UserStatusService {
-        return RedisUserStatusService(participantRepository,redisTemplate)
+    fun userStatusService(
+        @Qualifier("threadListInfo") threadListInfoTopic: ChannelTopic
+        ,@Qualifier("userLastReadTime")  userLastReadTimeTopic: ChannelTopic,
+        stringRedisTemplate: ReactiveRedisTemplate<String, String>,
+        objectMapper: ObjectMapper,
+        participantRepository: ParticipantRepository, redisTemplate: ReactiveRedisTemplate<String, Boolean>): UserStatusService {
+        return RedisUserStatusService(participantRepository,redisTemplate,stringRedisTemplate,threadListInfoTopic,userLastReadTimeTopic,objectMapper)
     }
 
     @Bean
@@ -54,20 +61,14 @@ class MyServiceFactory {
     fun noRedisUserStatusService(participantRepository: ParticipantRepository): UserStatusService {
         return NoRedisUserStatusService(participantRepository)
     }
-    @Bean("messageTotalUnreadCountService")
-    @Profile("no_redis")
-    fun messageTotalUnreadCountService(
-        participantRepository: ParticipantRepository,
-        userStatusService: UserStatusService
-    ): RealtimeEventService<TotalUnreadMessageCountVM, MessageVM> {
-        return MessageTotalUnreadCountService(participantRepository)
-    }
+
     @Bean("redisMessageTotalUnreadCountService")
     fun redisMessageTotalUnreadCountService(
         participantRepository: ParticipantRepository,
         redisTemplate: ReactiveRedisTemplate<String, String>,
         listenerContainer: ReactiveRedisMessageListenerContainer,
         objectMapper: ObjectMapper,
+        userStatusService: UserStatusService,
         @Qualifier("totalUnreadMessageCount") messageTopic: ChannelTopic
     ): RealtimeEventService<TotalUnreadMessageCountVM, MessageVM> {
         return RedisMessageTotalUnreadCountService(
@@ -75,6 +76,7 @@ class MyServiceFactory {
             redisTemplate,
             listenerContainer,
             objectMapper,
+            userStatusService,
             messageTopic
         )
     }
@@ -84,14 +86,16 @@ class MyServiceFactory {
         redisTemplate: ReactiveRedisTemplate<String, String>,
         listenerContainer: ReactiveRedisMessageListenerContainer,
         objectMapper: ObjectMapper,
+        participantRepository: ParticipantRepository,
         @Qualifier("userLastReadTime") messageTopic: ChannelTopic
-    ): RealtimeEventService<List<UserLastReadTimeVM>, MessageVM> {
+    ): RealtimeEventService<Map<String, UserLastReadTimeVM>, MessageVM> {
         return RedisUserLastReadTimeService(
             userStatusService,
             redisTemplate,
             listenerContainer,
             objectMapper,
-            messageTopic
+            messageTopic,
+            participantRepository,
         )
     }
 }

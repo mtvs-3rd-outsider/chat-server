@@ -1,8 +1,7 @@
 package com.example.kotlin.chat.service
 
 import com.example.kotlin.chat.asDomainObject
-import com.example.kotlin.chat.asRendered
-import com.example.kotlin.chat.mapToViewModel
+
 import com.example.kotlin.chat.repository.MessageRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.GlobalScope
@@ -39,8 +38,11 @@ class RedisMessageService(
                 .asFlow() // Flux를 Flow로 변환
                 .collect { message ->
                     val messageString = message.message as String
-                    val deserializedMessage = objectMapper.readValue(messageString, MessageVM::class.java)
-
+                    var deserializedMessage = objectMapper.readValue(messageString, MessageVM::class.java)
+                    // `sent` 필드에 9시간을 추가
+                    deserializedMessage = deserializedMessage.copy(
+                        sent = deserializedMessage.sent.plusSeconds(9 * 3600)
+                    )
                     // roomId에 따른 스트림에 메시지를 emit
                     val roomStream = getOrCreateStream(deserializedMessage.roomId)
                     roomStream.emit(deserializedMessage)
@@ -52,29 +54,37 @@ class RedisMessageService(
     override fun stream(roomId: String): Flow<MessageVM> = getOrCreateStream(roomId).asSharedFlow()
 
     // 최신 메시지 가져오기
-    override fun latest(roomId: String): Flow<MessageVM> =
-        messageRepository.findLatestAfterMessageInRoom(roomId)
-            .mapToViewModel()
+    override fun latest(roomId: String): Flow<MessageVM> {
+
+        return TODO("Provide the return value")
+    }
 
     // 특정 메시지 이후의 메시지 가져오기
-    override fun after(messageId: Int, roomId: String): Flow<MessageVM> =
-        messageRepository.findLatestAfterMessageInRoom(messageId, roomId)
-            .mapToViewModel()
+    override fun after(messageId: Int, roomId: String): Flow<MessageVM> {
+
+        return TODO("Provide the return value")
+    }
+
 
     // 메시지 전송 및 Redis 채널 발행
     override suspend fun post(messages: Flow<MessageVM>) {
         messages.collect { message ->
-            val renderedMessage = message.asRendered()
+            // 메시지를 영속화하고, ID가 포함된 상태를 보장
+            var savedMessage = messageRepository.save(message.asDomainObject())
 
+            // 만약 ID가 할당되지 않았다면, 다시 로드하여 ID가 포함된 객체를 얻기
+            if (savedMessage.id == null) {
+                savedMessage = messageRepository.findById(savedMessage.id!!)!!
+            }
+
+            val renderedMessage = message.copy(id=savedMessage.id )
             // MessageVM 객체를 JSON 문자열로 변환
             val messageString = objectMapper.writeValueAsString(renderedMessage)
 
-            // Redis 채널에 메시지 발행
+            // Redis 채널에 ID가 포함된 메시지 발행
             redisTemplate.convertAndSend(messageTopic.topic, messageString).subscribe()
 
-            // 메시지 저장
-            messageRepository.save(renderedMessage.asDomainObject())
-            logger.info("Published message for roomId ${message.roomId}: $messageString")
+            logger.info("Published message for roomId ${renderedMessage.roomId}: $messageString")
         }
     }
 

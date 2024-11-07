@@ -45,13 +45,13 @@ logging:
     org:
       springframework:
         r2dbc: DEBUG
-      rsocket: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.messaging.rsocket: DEBUG
-    org.springframework.security.rsocket: DEBUG  # RSocket Security 전용 디버깅
-    io.rsocket: DEBUG
-#      r2dbc: TRACE
-    org.springframework.data.redis: DEBUG  # Spring Data Redis 로깅 레벨
-    io.lettuce.core: DEBUG                 # Redis 클라이언트 Lettuce의 로깅 레벨
-    org.springframework.web: DEBUG         # 웹 요청 관련 디버그 (선택 사항)
-    root: INFO
+#      rsocket: DEBUG
+#    org.springframework.security: DEBUG
+#    org.springframework.messaging.rsocket: DEBUG
+#    org.springframework.security.rsocket: DEBUG  # RSocket Security 전용 디버깅
+#    io.rsocket: DEBUG
+      r2dbc: TRACE
+#    org.springframework.data.redis: DEBUG  # Spring Data Redis 로깅 레벨
+#    io.lettuce.core: DEBUG                 # Redis 클라이언트 Lettuce의 로깅 레벨
+#    org.springframework.web: DEBUG         # 웹 요청 관련 디버그 (선택 사항)
+#    root: INFO

@@ -11,30 +11,19 @@ import java.util.*
 
 fun MessageVM.asDomainObject(contentType: ContentType = ContentType.MARKDOWN): Message = Message(
     content = this.content,
-    contentTypeStr = contentType.name.uppercase(Locale.getDefault()),
+    contentTypeStr = this.contentType.uppercase(Locale.getDefault()),
     sent = this.sent,
-    username = this.user.name,
-    userAvatarImageLink = this.user.avatarImageLink.toString(),
     roomId = this.roomId, // roomId 추가
     id = this.id,
     userId = this.user.id,
-    replyToMessageId = this.replyToMessageId
-)
-
-fun Message.asViewModel(): MessageVM = MessageVM(
-    content = contentType.render(this.content),
-    user = UserVM(this.username, this.userAvatarImageLink,userId),
-    sent = this.sent,
-    roomId = this.roomId, // roomId 추가
-    id = this.id,
     replyToMessageId = this.replyToMessageId,
-    contentType = contentTypeStr
+    replyContent = this.replyContent,
+    mediaUrl = this.mediaUrl
 )
 
-fun MessageVM.asRendered(contentType: ContentType = ContentType.MARKDOWN): MessageVM =
-    this.copy(content = contentType.render(this.content))
 
-fun Flow<Message>.mapToViewModel(): Flow<MessageVM> = map { it.asViewModel() }
+
+
 
 fun ContentType.render(content: String): String = when (this) {
     ContentType.PLAIN -> content

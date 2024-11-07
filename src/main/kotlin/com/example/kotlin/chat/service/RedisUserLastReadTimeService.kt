@@ -1,10 +1,13 @@
 package com.example.kotlin.chat.service
 
+import com.example.kotlin.chat.repository.Participant
+import com.example.kotlin.chat.repository.ParticipantRepository
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
@@ -12,99 +15,110 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer
 import org.springframework.stereotype.Service
-
-
+import java.time.*
+import java.time.format.DateTimeFormatter
 
 @Service
 @Profile("redis")
 class RedisUserLastReadTimeService(
-    private val userStatusService: UserStatusService, // UserStatusService를 주입하여 온라인 상태 확인
-    private val redisTemplate: ReactiveRedisTemplate<String, String>, // Redis와 상호작용하는 ReactiveRedisTemplate
-    private val listenerContainer: ReactiveRedisMessageListenerContainer, // Redis 구독을 위한 ReactiveRedisMessageListenerContainer
-    private val objectMapper: ObjectMapper, // JSON 직렬화를 위한 ObjectMapper
-    @Qualifier("userLastReadTime") private val messageTopic: ChannelTopic // 구독할 Redis 토픽
-) : RealtimeEventService<List<UserLastReadTimeVM>, MessageVM> {
+    private val userStatusService: UserStatusService,
+    private val redisTemplate: ReactiveRedisTemplate<String, String>,
+    private val listenerContainer: ReactiveRedisMessageListenerContainer,
+    private val objectMapper: ObjectMapper,
+    @Qualifier("userLastReadTime") private val messageTopic: ChannelTopic,
+    private val participantRepository: ParticipantRepository,
+) : RealtimeEventService<Map<String, UserLastReadTimeVM>, MessageVM> {
 
-    // 각 roomId에 대한 마지막 읽은 시간을 관리하는 MutableSharedFlow 저장소
-    private val roomLastReadTimeStreams: MutableMap<String, MutableSharedFlow<List<UserLastReadTimeVM>>> = mutableMapOf()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val roomUserLastReadTimeStreams: MutableMap<String, MutableSharedFlow<Map<String, UserLastReadTimeVM>>> = mutableMapOf()
 
     init {
-        // Redis 토픽 구독 및 메시지 수신 처리
-        GlobalScope.launch {
+        coroutineScope.launch {
             listenerContainer.receive(messageTopic)
                 .asFlow()
                 .collect { message ->
                     val messageString = message.message as String
-                    val deserializedMessage = objectMapper.readValue(messageString, List::class.java) as List<UserLastReadTimeVM>
-
-                    // roomId에 해당하는 스트림에 반영
-                    if (deserializedMessage.isNotEmpty()) {
-                        val roomId = deserializedMessage[0].roomId
-                        val roomStream = getOrCreateStream(roomId)
-                        roomStream.emit(deserializedMessage)
-                    }
+                    val userLastReadTimeVM = objectMapper.readValue(messageString, UserLastReadTimeVM::class.java)
+                    val roomId = userLastReadTimeVM.roomId
+                    updateRoomParticipants(roomId,  userLastReadTimeVM.lastReadTime)
                 }
         }
     }
 
-    // roomId에 따른 마지막 읽은 시간 스트림 제공
-    override fun stream(roomId: String): Flow<List<UserLastReadTimeVM>> {
-        return getOrCreateStream(roomId)
+
+    private suspend fun updateRoomParticipants(roomId: String, newLastReadableTime: String?) {
+        val participants = participantRepository.findByThreadId(roomId.toLong())
+        val updatedData = mutableMapOf<String, UserLastReadTimeVM>()
+
+        participants.collect { participant ->
+            val userId = participant.userId.toString()
+
+            // isUserOnline 상태인 참가자만 업데이트
+            if (userStatusService.isUserOnline(userId, roomId)) {
+                participant.lastReadTime = LocalDateTime.now()
+                participantRepository.save(participant)
+
+                val userLastReadTimeVM = UserLastReadTimeVM(
+                    userId = userId,
+                    lastReadTime = LocalDateTime.now().toString(),
+                    roomId = roomId
+                )
+                updatedData[userId] = userLastReadTimeVM
+            }
+        }
+
+        // 업데이트된 데이터가 있는 경우에만 emit
+        if (updatedData.isNotEmpty()) {
+            getOrCreateRoomStream(roomId).emit(updatedData)
+        }
     }
 
-    override suspend fun latest(id: String): Flow<List<UserLastReadTimeVM>> {
-        TODO("Not yet implemented")
+    override fun stream(roomId: String): Flow<Map<String, UserLastReadTimeVM>> {
+        return  roomUserLastReadTimeStreams.getOrPut(roomId){ MutableSharedFlow(replay = 1) }.asSharedFlow()
     }
 
-    // 새로운 메시지 수신 시 Redis에 발행하고 업데이트
+    override suspend fun latest(id: String): Flow<Map<String, UserLastReadTimeVM>> = flow {
+        val participants = participantRepository.findByThreadId(id.toLong())
+        val roomInfo = mutableMapOf<String, UserLastReadTimeVM>()
+
+        participants.collect { participant ->
+            val userId = participant.userId.toString()
+            println(participant.lastReadTime)
+
+            // 한국 시간대로 변환
+            val lastReadTimeString = participant.lastReadTime
+                ?.atZone(ZoneId.systemDefault())
+                ?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+            roomInfo[userId] = UserLastReadTimeVM(
+                userId = userId,
+                lastReadTime = lastReadTimeString ?: Instant.now().toString(),
+                roomId = id
+            )
+            println("lastReadTimeString: " + roomInfo[userId]?.lastReadTime)
+        }
+
+        // 최종 `roomInfo`를 emit 한 번만 수행
+        emit(roomInfo)
+    }
+
+
     override suspend fun post(inboundMessages: Flow<MessageVM>) {
         inboundMessages.collect { message ->
-            val userId = message.user.id
             val roomId = message.roomId
             val newLastReadableTime = message.sent
 
-            val currentList = getOrCreateStream(roomId).replayCache.firstOrNull() ?: listOf()
-            val updatedList = currentList.map { readTime ->
-                if (userStatusService.isUserOnline(readTime.userId, roomId)) {
-                    readTime.copy(lastReadableTime = newLastReadableTime)
-                } else {
-                    readTime
-                }
-            }.toMutableList()
-
-            // userId가 리스트에 없으면 새로 추가
-            if (updatedList.none { it.userId == userId }) {
-                updatedList.add(
-                    UserLastReadTimeVM(
-                        userId = userId,
-                        lastReadableTime = newLastReadableTime,
-                        roomId = roomId
-                    )
-                )
-            }
-
-            // JSON으로 직렬화 후 Redis에 발행
-            val messageString = objectMapper.writeValueAsString(updatedList)
+            val userLastReadTime = UserLastReadTimeVM(
+                userId = message.user.id,
+                lastReadTime = newLastReadableTime.toString(),
+                roomId = roomId
+            )
+            val messageString = objectMapper.writeValueAsString(userLastReadTime)
             redisTemplate.convertAndSend(messageTopic.topic, messageString).subscribe()
-
-            // SharedFlow에 업데이트된 리스트 방출
-            getOrCreateStream(roomId).emit(updatedList)
         }
     }
 
-    // 특정 roomId에 대한 SharedFlow 스트림을 가져오거나 없으면 생성
-    private fun getOrCreateStream(roomId: String): MutableSharedFlow<List<UserLastReadTimeVM>> {
-        return roomLastReadTimeStreams.getOrPut(roomId) { MutableSharedFlow(replay = 1) }
-    }
-
-    // 특정 userId와 roomId에 대한 마지막 읽은 시간을 조회
-    suspend fun getLastReadTime(userId: String, roomId: String): UserLastReadTimeVM? {
-        val currentList = getOrCreateStream(roomId).replayCache.firstOrNull() ?: listOf()
-        return currentList.firstOrNull { it.userId == userId }
-    }
-
-    // 특정 roomId에 대한 모든 읽은 시간 정보를 반환
-    suspend fun getAllLastReadTimes(roomId: String): List<UserLastReadTimeVM> {
-        return getOrCreateStream(roomId).replayCache.firstOrNull() ?: listOf()
+    private fun getOrCreateRoomStream(roomId: String): MutableSharedFlow<Map<String, UserLastReadTimeVM>> {
+        return roomUserLastReadTimeStreams.getOrPut(roomId){ MutableSharedFlow(replay = 1) }
     }
 }

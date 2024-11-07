@@ -11,26 +11,28 @@ import java.util.*
 data class Message(
     val content: String,
     @Column("content_type")
-    val contentTypeStr: String, // 데이터베이스에서 읽어온 문자열 값
+    val contentTypeStr: String,
     val sent: Instant,
-    val username: String,
     @Column("user_id")
     val userId: String,
-    val userAvatarImageLink: String,
     @Column("room_id")
     val roomId: String,
     @Id var id: Int?,
     @Column("reply_to_message_id")
-    val replyToMessageId: String?, // 원본 메시지에 대한 참조
-    // 반응 리스트 추가
+    val replyToMessageId: String?,
+    @Column("reply_content")
+    val replyContent: String?, // 답글 내용 추가
+    @Column("media_url")
+    val mediaUrl: String? // 미디어 URL 추가
+
+
+
 ) {
     val contentType: ContentType
-        get() = ContentType.valueOf(contentTypeStr.uppercase(Locale.getDefault())) // 문자열을 enum으로 변환
+        get() = ContentType.valueOf(contentTypeStr.uppercase(Locale.getDefault()))
 }
 
 enum class ContentType {
-    PLAIN, MARKDOWN , IMAGE, VIDEO , FEED
+    PLAIN, MARKDOWN, IMAGE, VIDEO, FEED
 }
-
-
 

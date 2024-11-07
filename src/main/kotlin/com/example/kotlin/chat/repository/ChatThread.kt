@@ -18,5 +18,8 @@ data class ChatThread(
     var lastMessage: String? = null,  // 마지막 메시지 내용을 저장하는 필드
 
     @Column("last_message_time")
-    var lastMessageTime: LocalDateTime? = null  // 마지막 메시지가 전송된 시간을 저장하는 필드
+    var lastMessageTime: LocalDateTime? = null,  // 마지막 메시지가 전송된 시간을 저장하는 필드
+
+    @Column("is_group_thread")
+    val isGroupThread: Boolean = false // 그룹 채팅 여부
 )

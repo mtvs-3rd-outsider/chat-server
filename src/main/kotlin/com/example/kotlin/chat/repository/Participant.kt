@@ -8,10 +8,10 @@ import java.time.LocalDateTime
 @Table("participants")
 data class Participant(
     @Id
-    @Column("participant_id")
-    val participantId: Long? = null,
+    @Column("id")
+    val id: Long? = null,  // 기본 키
 
-    @Column("thread_id")
+    @Column("chat_room_id")
     val threadId: Long,  // 채팅방과의 관계를 나타내는 외래 키
 
     @Column("user_id")
@@ -19,8 +19,9 @@ data class Participant(
 
     @Column("is_online")
     var isOnline: Boolean = false,  // 사용자의 온라인 여부
+
     @Column("last_read_time")
-    var lastReadTime: LocalDateTime? = null,
+    var lastReadTime: LocalDateTime? = LocalDateTime.now(),  // 사용자의 마지막 읽은 시간
 
     @Column("unread_message_count")
     var unreadMessageCount: Int = 0  // 읽지 않은 메시지 수

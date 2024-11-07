@@ -120,4 +120,9 @@ class RedisConfig {
     fun threadListInfo(): ChannelTopic {
         return ChannelTopic("threadListInfo")
     }
+
+    @Bean("reactionTopic")
+    fun reactionTopic(): ChannelTopic {
+        return ChannelTopic("reactionTopic")
+    }
 }

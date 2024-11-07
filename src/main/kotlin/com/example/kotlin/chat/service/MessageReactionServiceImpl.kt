@@ -1,53 +1,90 @@
 package com.example.kotlin.chat.service
 
-
-import com.example.kotlin.chat.mapToViewModel
-import com.example.kotlin.chat.repository.MessageReactionRepository
 import com.example.kotlin.chat.toDomainObject
+import com.example.kotlin.chat.repository.MessageReactionRepository
+import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.data.redis.listener.ChannelTopic
+import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 @Service
-class MessageReactionServiceImpl(val messageReactionRepository: MessageReactionRepository): MessageReactionService {
+class MessageReactionServiceImpl(
+    private val messageReactionRepository: MessageReactionRepository,
+    private val redisTemplate: ReactiveRedisTemplate<String, String>, // Redis 통합
+    private val listenerContainer: ReactiveRedisMessageListenerContainer,
+    @Qualifier("reactionTopic") private val reactionTopic: ChannelTopic, // Redis 채널
+    private val objectMapper: ObjectMapper
+) : MessageReactionService {
 
-    // 각 roomId에 대응하는 스트림을 관리하는 맵
+    private val logger = LoggerFactory.getLogger(MessageReactionServiceImpl::class.java)
     private val roomStreams: MutableMap<String, MutableSharedFlow<MessageReactionVM>> = mutableMapOf()
 
-
-    // 반응을 저장하고 실시간으로 각 roomId에 맞는 스트림에 전송
-    override suspend fun post(reactions: Flow<MessageReactionVM>) {
-        reactions
-            .onEach { reaction ->
-                val roomId = reaction.roomId // 각 반응의 roomId를 사용하여 스트림을 선택
-                getOrCreateStream(roomId).emit(reaction) // 해당 roomId의 스트림에 반응 전송
-            }
-            .collect { reaction ->
-                if (reaction.isPlus) {
-                    // 반응을 추가하는 경우 (save)
-                    messageReactionRepository.save(reaction.toDomainObject())
-                } else {
-                    // 반응을 제거하는 경우 (delete)
-                    messageReactionRepository.delete(reaction.toDomainObject())
+    init {
+        // Redis 메시지 리스너 설정: 수신된 메시지를 해당 roomId 스트림으로 emit
+        CoroutineScope(Dispatchers.IO).launch {
+            listenerContainer.receive(reactionTopic)
+                .asFlow()
+                .collect { message ->
+                    val messageString = message.message as String
+                    val reaction = objectMapper.readValue(messageString, MessageReactionVM::class.java)
+                    getOrCreateStream(reaction.roomId).emit(reaction)
+                    logger.info("Received reaction for roomId ${reaction.roomId}: $reaction")
                 }
-            }
-    }
-    private fun getOrCreateStream(roomId: String): MutableSharedFlow<MessageReactionVM> {
-        return roomStreams.getOrPut(roomId) {
-            MutableSharedFlow() // 새 스트림 생성 (replay 설정은 필요에 따라 조정)
         }
     }
+    override suspend fun post(reactions: Flow<MessageReactionVM>) {
+        reactions.onEach { reaction ->
+            val roomId = reaction.roomId
 
-    override fun stream(roomId: String): Flow<MessageReactionVM> {
-        return getOrCreateStream(roomId)
+            // 기존 반응을 확인
+            val existingReaction = messageReactionRepository.findReactionByMessageIdAndUserIdAndReactionTypeAndRoomId(
+                reaction.messageId, reaction.userId, reaction.reactionType, roomId
+            )
+
+            // 상태 변경 및 영속화 처리
+            val modifiedReaction = when (reaction.actionType) {
+                "plus" -> {
+                    if (existingReaction != null) {
+                        // 이미 반응이 있는 경우 "none" 상태로 전환
+                        reaction.copy(actionType = "none")
+                    } else {
+                        // 반응이 없는 경우 새로운 "plus" 상태로 유지하여 저장
+                        messageReactionRepository.save(reaction.toDomainObject())
+                        reaction.copy(actionType = "plus")
+                    }
+                }
+                "minus" -> {
+                    if (existingReaction != null) {
+
+                        // 반응이 없는 경우 새로운 "minus" 상태로 유지하여 저장
+                        messageReactionRepository.deleteByMessageIdAndUserIdAndReactionTypeAndRoomId(reaction.messageId,reaction.userId, reaction.reactionType, roomId)
+                        reaction.copy(actionType = "minus")
+                    } else {
+                        reaction.copy(actionType = "none")
+                    }
+                }
+                else -> reaction // "none" 상태일 때 그대로 유지
+            }
+
+            // 변경된 상태를 Redis 채널에 발행
+            val reactionString = objectMapper.writeValueAsString(modifiedReaction)
+            redisTemplate.convertAndSend(reactionTopic.topic, reactionString).subscribe()
+            logger.info("Published modified reaction for roomId $roomId: $reactionString")
+
+        }.collect()
     }
-//    override fun latest(roomId: String): Flow<MessageVM> =
-//        messageReactionRepository.findLatestAfterMessageInRoom(roomId)
-//            .mapToViewModel()
-//    // 특정 메시지 이후의 메시지 가져오기
-//    override fun after(messageId: Int, roomId: String): Flow<MessageVM> =
-//        messageReactionRepository.findLatestAfterMessageInRoom(messageId, roomId)
-//            .mapToViewModel()
 
+    private fun getOrCreateStream(roomId: String): MutableSharedFlow<MessageReactionVM> {
+        return roomStreams.getOrPut(roomId) { MutableSharedFlow() }
+    }
+
+    override fun stream(roomId: String): Flow<MessageReactionVM> = getOrCreateStream(roomId)
 }
-

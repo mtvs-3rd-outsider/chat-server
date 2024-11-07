@@ -9,6 +9,20 @@ import java.time.Instant
 
 interface MessageReactionRepository : CoroutineCrudRepository<MessageReaction, Int> {
 
+    @Query("DELETE FROM message_reactions WHERE message_id = :messageId AND user_id = :userId AND reaction_type = :reactionType AND room_id = :roomId")
+    suspend fun deleteByMessageIdAndUserIdAndReactionTypeAndRoomId(
+        messageId: Int,
+        userId: String,
+        reactionType: String,
+        roomId: String
+    ): Long
+
+    suspend fun findReactionByMessageIdAndUserIdAndReactionTypeAndRoomId(
+        messageId: Int,
+        userId: String,
+        reactionType: String,
+        roomId: String
+    ): MessageReaction?
     // 특정 채팅방에서 특정 시간 이전에 발생한 반응을 페이지네이션으로 조회
     @Query("""
         SELECT *

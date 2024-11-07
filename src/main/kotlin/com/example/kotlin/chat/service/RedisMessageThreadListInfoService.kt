@@ -4,107 +4,133 @@ import com.example.kotlin.chat.repository.ChatThreadRepository
 import com.example.kotlin.chat.repository.Participant
 import com.example.kotlin.chat.repository.ParticipantRepository
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-
 @Service
-@Profile("redis")
 class RedisMessageThreadListInfoService(
     private val chatThreadRepository: ChatThreadRepository,
     private val participantRepository: ParticipantRepository,
     private val redisTemplate: ReactiveRedisTemplate<String, String>,
     private val listenerContainer: ReactiveRedisMessageListenerContainer,
     private val objectMapper: ObjectMapper,
-    @Qualifier("threadListInfo") private val messageTopic: ChannelTopic // Redis 채널 토픽
-) : RealtimeEventService<List<RoomInfoVM>, MessageVM> {
+    private val userStatusService: UserStatusService,
+    @Qualifier("threadListInfo") private val messageTopic: ChannelTopic
+) : RealtimeEventService<Map<String, RoomInfoVM>, MessageVM> {
 
-    private val threadInfoStreams: MutableMap<String, MutableSharedFlow<List<RoomInfoVM>>> = mutableMapOf()
+    // 코루틴 범위를 설정하여 GlobalScope 대체
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    // userId 별 RoomInfoVM을 저장하는 SharedFlow 맵
+    private val threadInfoStreams: MutableMap<String, MutableSharedFlow<Map<String, RoomInfoVM>>> = mutableMapOf()
 
     init {
-        // Redis 토픽 구독 및 메시지 수신
-        GlobalScope.launch {
+        coroutineScope.launch {
             listenerContainer.receive(messageTopic)
                 .asFlow()
                 .collect { message ->
                     val messageString = message.message as String
-                    val deserializedMessage = objectMapper.readValue(messageString, List::class.java) as List<RoomInfoVM>
-                    val userId = deserializedMessage.firstOrNull()?.roomId ?: return@collect // 방 정보가 없으면 무시
+                    val roomInfo = objectMapper.readValue(messageString, RoomInfoVM::class.java)
+                    val userId = roomInfo.userId
 
-                    // Redis에서 수신한 데이터를 SharedFlow에 반영
-                    getOrCreateStream(userId).emit(deserializedMessage)
+                    // 현재 사용자 스트림의 기존 데이터 가져오기
+                    val userStream = threadInfoStreams.getOrPut(userId) { MutableSharedFlow(replay = 1) }
+                    val currentData = userStream.replayCache.firstOrNull() ?: mapOf()
+
+                    // 현재 방 정보가 업데이트된 정보와 다를 경우에만 방출
+                    if (currentData[roomInfo.roomId] != roomInfo) {
+                        // 업데이트된 방 정보로 부분 맵 생성
+                        val updatedData = mapOf(roomInfo.roomId to roomInfo)
+
+                        // 변경된 부분만 사용자 스트림에 emit
+                        userStream.emit(updatedData)
+                    }
                 }
         }
     }
 
-    // 사용자의 방 정보 스트림을 제공
-    override fun stream(userId: String): Flow<List<RoomInfoVM>> {
-        return getOrCreateStream(userId)
+
+    override fun stream(userId: String): Flow<Map<String, RoomInfoVM>> {
+        return threadInfoStreams.getOrPut(userId) { MutableSharedFlow(replay = 1) }.asSharedFlow()
     }
 
-    // userId에 대한 SharedFlow 생성 또는 반환
-    private fun getOrCreateStream(userId: String): MutableSharedFlow<List<RoomInfoVM>> {
+    private fun getOrCreateStream(userId: String): MutableSharedFlow<Map<String, RoomInfoVM>> {
         return threadInfoStreams.getOrPut(userId) { MutableSharedFlow(replay = 1) }
     }
 
-    // 사용자가 속한 모든 방 정보를 Redis에서 최신 상태로 조회
-    override suspend fun latest(id: String): Flow<List<RoomInfoVM>> {
-        val participants = participantRepository.findByUserId(id.toLong())
-        return flow {
-            val roomInfoList = participants.map { participant ->
-                val chatThread = chatThreadRepository.findById(participant.threadId) // 방 정보 조회
-                RoomInfoVM(
-                    roomId = chatThread?.chatRoomId.toString(),
-                    roomName = "Room ${chatThread?.chatRoomId}",
-                    lastMessage = chatThread?.lastMessage ?: "No message",
-                    lastMessageTime = chatThread?.lastMessageTime ?: LocalDateTime.now(),
+    override suspend fun latest(userId: String): Flow<Map<String, RoomInfoVM>> {
+        val participants = participantRepository.findByUserId(userId.toLong())
+
+        val roomInfoMap = mutableMapOf<String, RoomInfoVM>()
+        participants.collect { participant ->
+            val chatThread = chatThreadRepository.findById(participant.threadId)
+            if (chatThread != null) {
+                val roomInfoVM = RoomInfoVM(
+                    roomId = chatThread.chatRoomId.toString(),
+                    userId = userId,
+                    roomName = "Room ${chatThread.chatRoomId}",
+                    lastMessage = chatThread.lastMessage ?: "No message",
+                    lastMessageTime = chatThread.lastMessageTime ?: LocalDateTime.now(),
                     unreadMessageCount = participant.unreadMessageCount
                 )
-            }.toList()
-            emit(roomInfoList)
+                // 수동으로 roomId를 키로 하여 roomInfoVM 추가
+                roomInfoMap[roomInfoVM.roomId] = roomInfoVM
+            }
         }
+
+        // SharedFlow에 데이터를 초기화
+        getOrCreateStream(userId).emit(roomInfoMap)
+        return flowOf(roomInfoMap)
     }
 
-    // 새 메시지가 수신되었을 때 Redis에 방 정보를 업데이트하고 발행
     override suspend fun post(inboundMessages: Flow<MessageVM>) {
         inboundMessages.collect { message ->
-            val roomId = message.roomId.toLong()
+            val roomId = message.roomId
+            val newLastMessage = message.content
+            val newLastMessageTime = LocalDateTime.now()
 
-            // 각 참여자에게 방 정보를 업데이트
-            val participants: Flow<Participant> = participantRepository.findByThreadId(roomId)
+            // 채팅방 업데이트
+            val chatThread = chatThreadRepository.findById(roomId.toLong())
+            chatThread?.let {
+                it.lastMessage = newLastMessage
+                it.lastMessageTime = newLastMessageTime
+                chatThreadRepository.save(it)
+            }
+
+            // 참여자 업데이트 및 상태 확인
+            val participants: Flow<Participant> = participantRepository.findByThreadId(roomId.toLong())
             participants.collect { participant ->
                 val userId = participant.userId.toString()
 
-                // 현재 SharedFlow의 방 정보를 가져옴
-                val currentRoomInfoList = getOrCreateStream(userId).replayCache.firstOrNull() ?: listOf()
-
-                // 방 정보 업데이트
-                val updatedRoomInfoList = currentRoomInfoList.map { roomInfo ->
-                    if (roomInfo.roomId == roomId.toString()) {
-                        roomInfo.copy(
-                            lastMessage = message.content,
-                            lastMessageTime = LocalDateTime.now(),
-                            unreadMessageCount = roomInfo.unreadMessageCount + 1
-                        )
-                    } else {
-                        roomInfo
-                    }
+                // 온라인 상태에 따라 unreadMessageCount 업데이트
+                if (!userStatusService.isUserOnline(userId, roomId)) {
+                    participant.unreadMessageCount += 1 // 읽지 않은 메시지 수 증가
+                } else {
+                    participant.unreadMessageCount = 0 // 온라인 상태일 때 읽지 않은 메시지 초기화
                 }
 
-                // JSON 직렬화 후 Redis에 방 정보 발행
-                val messageString = objectMapper.writeValueAsString(updatedRoomInfoList)
-                redisTemplate.convertAndSend(messageTopic.topic, messageString).subscribe()
+                // 변경 사항 영속화
+                participantRepository.save(participant)
 
-                // SharedFlow에 업데이트된 방 정보를 반영
-                getOrCreateStream(userId).emit(updatedRoomInfoList)
+                // 업데이트된 RoomInfoVM 생성
+                val updatedRoomInfo = RoomInfoVM(
+                    roomId = roomId,
+                    userId = userId,
+                    roomName = "Room $roomId",
+                    lastMessage = newLastMessage,
+                    lastMessageTime = newLastMessageTime,
+                    unreadMessageCount = participant.unreadMessageCount
+                )
+
+                // Redis에 발행
+                val messageString = objectMapper.writeValueAsString(updatedRoomInfo)
+                redisTemplate.convertAndSend(messageTopic.topic, messageString).subscribe()
             }
         }
     }
