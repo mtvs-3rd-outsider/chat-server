@@ -30,7 +30,8 @@ out/
 /nbdist/
 /.nb-gradle/
 /docker-compose
-.env.k83
+.env.k83-chat
 .env
+keystore.p12
 ### VS Code ###
 .vscode/
