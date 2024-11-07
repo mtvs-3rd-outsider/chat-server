@@ -22,7 +22,10 @@ spring:
         enabled: true
         key-alias: tomcat
         key-store-type: PKCS12
-
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
   r2dbc:
     url: ${DB_USER_URL}
     username: ${DB_USER_NAME}
