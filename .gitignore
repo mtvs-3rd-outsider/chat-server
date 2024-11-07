@@ -29,6 +29,8 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
-
+/docker-compose
+.env.k83
+.env
 ### VS Code ###
 .vscode/
