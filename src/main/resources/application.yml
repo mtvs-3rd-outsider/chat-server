@@ -7,12 +7,6 @@ server:
     key-alias: tomcat
     enabled: ${SSL_ENABLE}
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8085/realms/myrealm
-          jwk-set-uri: http://localhost:8085/realms/myrealm/protocol/openid-connect/certs
   reactor:
     debug-agent:
       enabled: true
@@ -21,18 +15,18 @@ spring:
   rsocket:
     server:
       transport: websocket
-      mapping-path: https://master-of-prediction.shop:7000/rsocket
+      mapping-path: ${RSOCKET_MAPPING}
       ssl:
-        key-store: classpath:keystore.p12
-        key-store-password: 1234
+        key-store: ${KEY_STORE_PATH}
+        key-store-password: ${SSL_KEY_STORE_PASSWORD}
         enabled: true
         key-alias: tomcat
         key-store-type: PKCS12
 
   r2dbc:
-    url: r2dbc:mysql://localhost:9876/forecasthub
-    username: root
-    password: 1234
+    url: ${DB_USER_URL}
+    username: ${DB_USER_NAME}
+    password: ${DB_USER_PASSWORD}
 
   main:
     allow-bean-definition-overriding: true
