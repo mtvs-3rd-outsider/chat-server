@@ -36,7 +36,14 @@ spring:
 jwt:
   expiration_time: 86400000 #1일
   secret: ${JWT_SECRET}
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*' # 모든 엔드포인트를 노출
+  endpoint:
+    prometheus:
+      enabled: true # Prometheus 엔드포인트 활성화
 logging:
   level:
     org:
