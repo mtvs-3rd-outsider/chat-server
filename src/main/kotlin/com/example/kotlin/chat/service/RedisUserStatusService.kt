@@ -11,6 +11,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.listener.ChannelTopic
+import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -37,12 +38,11 @@ class RedisUserStatusService(
         participant?.let {
             it.isOnline = true
             it.unreadMessageCount = 0
-            it.lastReadTime = LocalDateTime.now()
+            it.lastReadTime = Instant.now()
             participantRepository.save(it)
 
-            val lastReadTimeString = it.lastReadTime
-                ?.atZone(ZoneId.systemDefault())
-                ?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            val lastReadTimeString = it.lastReadTime.toString()
+
 
             if (lastReadTimeString != null) {
                 val statusMessage = UserLastReadTimeVM(
@@ -59,7 +59,7 @@ class RedisUserStatusService(
                 roomId = roomId,
                 roomName = "Room $roomId",
                 lastMessage = "No recent messages",
-                lastMessageTime = LocalDateTime.now(),
+                lastMessageTime = Instant.now(),
                 unreadMessageCount = 0
             )
 

@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
 @Service
 class RedisMessageThreadListInfoService(
@@ -76,7 +77,7 @@ class RedisMessageThreadListInfoService(
                     userId = userId,
                     roomName = "Room ${chatThread.chatRoomId}",
                     lastMessage = chatThread.lastMessage ?: "No message",
-                    lastMessageTime = chatThread.lastMessageTime ?: LocalDateTime.now(),
+                    lastMessageTime = chatThread.lastMessageTime ?: Instant.now(),
                     unreadMessageCount = participant.unreadMessageCount
                 )
                 // 수동으로 roomId를 키로 하여 roomInfoVM 추가
@@ -93,7 +94,7 @@ class RedisMessageThreadListInfoService(
         inboundMessages.collect { message ->
             val roomId = message.roomId
             val newLastMessage = message.content
-            val newLastMessageTime = LocalDateTime.now()
+            val newLastMessageTime = Instant.now()
 
             // 채팅방 업데이트
             val chatThread = chatThreadRepository.findById(roomId.toLong())

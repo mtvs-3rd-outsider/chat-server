@@ -2,6 +2,7 @@ import com.example.kotlin.chat.repository.ParticipantRepository
 import com.example.kotlin.chat.service.UserStatusService
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -23,7 +24,7 @@ class NoRedisUserStatusService(
         val participant = participantRepository.findByUserIdAndThreadId(userId.toLong(), roomId.toLong())
         participant?.let {
             it.isOnline = true
-            it.lastReadTime = LocalDateTime.now(ZoneId.systemDefault()) // 현재 시간을 lastReadTime으로 설정
+            it.lastReadTime = Instant.now() // 현재 시간을 lastReadTime으로 설정
             participantRepository.save(it) // 변경 사항 영속화
         }
     }

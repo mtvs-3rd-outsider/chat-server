@@ -6,6 +6,7 @@ import com.example.kotlin.chat.repository.ParticipantRepository
 import kotlinx.coroutines.flow.*
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
 //@Service
 class MessageThreadListInfoService(
@@ -34,7 +35,7 @@ class MessageThreadListInfoService(
                     roomId = chatThread?.chatRoomId.toString(),
                     roomName = "Room ${chatThread?.chatRoomId}", // 방 이름
                     lastMessage = chatThread?.lastMessage ?: "No message",
-                    lastMessageTime = chatThread?.lastMessageTime ?: LocalDateTime.now(),
+                    lastMessageTime = chatThread?.lastMessageTime ?: Instant.now(),
                     unreadMessageCount = participant.unreadMessageCount,
                     userId = id
                 )
@@ -61,7 +62,7 @@ class MessageThreadListInfoService(
                         // 해당 방에 대한 정보를 부분 업데이트
                         roomInfo.copy(
                             lastMessage = message.content,
-                            lastMessageTime = LocalDateTime.now(),
+                            lastMessageTime = Instant.now(),
                             unreadMessageCount = roomInfo.unreadMessageCount + 1 // 읽지 않은 메시지 수 증가
                         )
                     } else {

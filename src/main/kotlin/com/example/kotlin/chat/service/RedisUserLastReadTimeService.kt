@@ -55,12 +55,12 @@ class RedisUserLastReadTimeService(
 
             // isUserOnline 상태인 참가자만 업데이트
             if (userStatusService.isUserOnline(userId, roomId)) {
-                participant.lastReadTime = LocalDateTime.now()
+                participant.lastReadTime = Instant.now()
                 participantRepository.save(participant)
 
                 val userLastReadTimeVM = UserLastReadTimeVM(
                     userId = userId,
-                    lastReadTime = LocalDateTime.now().toString(),
+                    lastReadTime = Instant.now().toString(),
                     roomId = roomId
                 )
                 updatedData[userId] = userLastReadTimeVM

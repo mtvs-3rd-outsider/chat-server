@@ -3,6 +3,7 @@ package com.example.kotlin.chat.repository
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
+import java.time.Instant
 import java.time.LocalDateTime
 
 @Table("participants")
@@ -21,7 +22,7 @@ data class Participant(
     var isOnline: Boolean = false,  // 사용자의 온라인 여부
 
     @Column("last_read_time")
-    var lastReadTime: LocalDateTime? = LocalDateTime.now(),  // 사용자의 마지막 읽은 시간
+    var lastReadTime: Instant? = Instant.now(),  // 사용자의 마지막 읽은 시간
 
     @Column("unread_message_count")
     var unreadMessageCount: Int = 0  // 읽지 않은 메시지 수
