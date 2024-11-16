@@ -38,6 +38,7 @@ class MessageResource(
             when (it) {
                 is String -> it
                 is Int -> it.toString()
+                is Long -> it.toString()
                 else -> throw IllegalArgumentException("Unsupported userId type")
             }
         } ?: throw IllegalArgumentException("userId is missing")
@@ -119,6 +120,7 @@ class MessageResource(
             when (it) {
                 is String -> it
                 is Int -> it.toString()
+                is Long -> it.toString()
                 else -> throw IllegalArgumentException("Unsupported userId type")
             }
         } ?: throw IllegalArgumentException("userId is missing")
