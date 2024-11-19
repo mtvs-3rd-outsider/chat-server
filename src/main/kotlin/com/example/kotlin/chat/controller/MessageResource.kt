@@ -26,6 +26,7 @@ class MessageResource(
     val userLastReadTimeService: RealtimeEventService<Map<String, UserLastReadTimeVM>, MessageVM>,
     val messageService: MessageService,
     val userStatusService: UserStatusService
+
 ) {
 
     @MessageMapping("stream/{roomId}")

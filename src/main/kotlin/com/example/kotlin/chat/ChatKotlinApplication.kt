@@ -13,7 +13,7 @@ import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 import reactor.core.publisher.Hooks
 import java.lang.management.ManagementFactory
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["com.example.kotlin.chat"])
 class ChatKotlinApplication
 
 fun main(args: Array<String>) {

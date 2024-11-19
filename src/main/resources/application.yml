@@ -41,6 +41,9 @@ management:
     web:
       exposure:
         include: '*' # 모든 엔드포인트를 노출
+  metrics:
+    tags:
+      application: "my-webflux-app"
   endpoint:
     prometheus:
       enabled: true # Prometheus 엔드포인트 활성화
@@ -59,3 +62,8 @@ logging:
 #    io.lettuce.core: DEBUG                 # Redis 클라이언트 Lettuce의 로깅 레벨
 #    org.springframework.web: DEBUG         # 웹 요청 관련 디버그 (선택 사항)
 #    root: INFO
+#influx:
+#  url: "http://localhost:8087"
+#  token: "your_admin_token"
+#  org: "master-of-prediction"
+#  bucket: "1m_data"
