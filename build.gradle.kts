@@ -68,6 +68,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리
 	// https://mvnrepository.com/artifact/io.projectreactor/reactor-tools
 	implementation("io.projectreactor:reactor-tools:3.6.11")
+	implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 tasks.withType<Test> {

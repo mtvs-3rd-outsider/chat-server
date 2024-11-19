@@ -42,7 +42,8 @@ class SecurityConfig(@Value("\${jwt.secret}") private val secretKey: String ) {
     fun authorization(security: RSocketSecurity): PayloadSocketAcceptorInterceptor {
         security.authorizePayload { authorize: AuthorizePayloadsSpec ->
             authorize
-                .setup().authenticated()
+                .route("api.v1.status.connect").permitAll()
+                .setup().permitAll()
                 .anyRequest().authenticated()
                 .anyExchange().authenticated()
         } // all connections, exchanges.
