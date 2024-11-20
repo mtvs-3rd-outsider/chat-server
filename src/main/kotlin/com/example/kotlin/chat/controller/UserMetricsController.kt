@@ -1,9 +1,10 @@
 package com.example.kotlin.chat.controller
 
+import com.example.kotlin.chat.service.UserCount
 import com.example.kotlin.chat.service.UserStatusMonitoringService
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
@@ -17,6 +18,15 @@ import org.springframework.stereotype.Controller
 class UserStatusController(
     private val userStatusMonitoringService: UserStatusMonitoringService
 ) {
+
+    /**
+     * 실시간 사용자 상태 스트림을 반환하는 엔드포인트
+     */
+    @MessageMapping("user-counts")
+    fun streamUserCounts(): Flow<UserCount> = userStatusMonitoringService.stream()
+        .onStart {
+            emitAll(userStatusMonitoringService.latest())
+        }
 
     @MessageMapping("connect")
     fun connect(

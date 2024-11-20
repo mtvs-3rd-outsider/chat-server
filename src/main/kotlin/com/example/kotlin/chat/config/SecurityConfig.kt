@@ -43,6 +43,7 @@ class SecurityConfig(@Value("\${jwt.secret}") private val secretKey: String ) {
         security.authorizePayload { authorize: AuthorizePayloadsSpec ->
             authorize
                 .route("api.v1.status.connect").permitAll()
+                .route("api.v1.status.userCounts").permitAll()
                 .setup().permitAll()
                 .anyRequest().authenticated()
                 .anyExchange().authenticated()

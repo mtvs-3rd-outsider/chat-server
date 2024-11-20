@@ -1,5 +1,6 @@
 package com.example.kotlin.chat.service
 import io.micrometer.core.instrument.MeterRegistry
+import kotlinx.coroutines.flow.*
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,6 +14,28 @@ class UserStatusMonitoringService(private val meterRegistry: MeterRegistry) {
         meterRegistry.gauge("authenticated_users", this) { it.authenticatedUserCount }
         meterRegistry.gauge("anonymous_users", this) { it.anonymousUserCount }
     }
+    private fun getCurrentUserCount(): UserCount {
+        val authenticatedCount = getAuthenticatedUserCount()
+        val anonymousCount = getAnonymousUserCount()
+        return UserCount(authenticatedCount, anonymousCount)
+    }
+    // 실시간 사용자 수 상태를 위한 MutableSharedFlow 생성
+    private val userCountFlow = MutableSharedFlow<UserCount>(replay = 1)
+
+
+    /**
+     * 최신 사용자 상태를 반환하는 함수
+     */
+    fun latest(): Flow<UserCount> = flow {
+        emit(getCurrentUserCount()) // 최신 사용자 상태를 한 번 방출
+    }
+
+    /**
+     * 실시간 사용자 상태 스트림을 반환하는 함수
+     */
+    fun stream(): Flow<UserCount> = userCountFlow
+        .asSharedFlow()
+
 
     // 인증 사용자 증가
     fun incrementAuthenticatedUser() {

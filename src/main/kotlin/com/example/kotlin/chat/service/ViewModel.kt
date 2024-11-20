@@ -77,3 +77,9 @@ data class UserStatusUpdateVM(
     val userId: String,
     val isOnline: Boolean
 )
+
+
+data class UserCount(
+    val authenticatedUserCount: Int,
+    val anonymousUserCount: Int
+)
