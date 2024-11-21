@@ -69,6 +69,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/io.projectreactor/reactor-tools
 	implementation("io.projectreactor:reactor-tools:3.6.11")
 	implementation("io.micrometer:micrometer-registry-prometheus")
+
+	// 로깅
+	implementation("ch.qos.logback:logback-classic")
+	implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 }
 
 tasks.withType<Test> {
