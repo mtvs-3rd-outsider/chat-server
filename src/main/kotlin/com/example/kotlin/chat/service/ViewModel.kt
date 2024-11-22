@@ -52,7 +52,7 @@ data class RoomInfoVM(
     val roomId: String,
     val roomName: String,
     val lastMessage: String,
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "Asia/Seoul")
     val lastMessageTime: Instant,
     val unreadMessageCount: Int  // 읽지 않은 메시지 개수
 )

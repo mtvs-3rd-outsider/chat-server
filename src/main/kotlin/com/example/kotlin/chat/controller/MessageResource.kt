@@ -46,6 +46,12 @@ class MessageResource(
 
         println("User ID: $userId")
 
+        val parsedRoomId = try {
+            roomId.toInt()
+        } catch (e: NumberFormatException) {
+            null
+        }
+
         val messagesWithUserId = inboundMessages.map { message ->
             message.copy(
                 roomId = roomId,
@@ -64,12 +70,17 @@ class MessageResource(
             }
 
             // 각 서비스에 공유된 메시지 스트림 전달
-            launch { messageService.post(sharedFlow) }
-            launch { messageThreadListInfoService.post(sharedFlow) }
-//            launch { messageUnreadCountService.post(sharedFlow) }
-            launch { userLastReadTimeService.post(sharedFlow) }
+            if (parsedRoomId != null) {
+                launch { messageService.post(sharedFlow) }
+                launch { messageThreadListInfoService.post(sharedFlow) }
+                launch { userLastReadTimeService.post(sharedFlow) }
+            } else {
+                println("Invalid roomId format: Using only messageService")
+                launch { messageService.post(sharedFlow) }
+            }
         }
     }
+
     @MessageMapping("stream/{roomId}")
     fun send(@DestinationVariable roomId: String): Flow<MessageVM> = messageService
         .stream(roomId)
