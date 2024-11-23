@@ -1,12 +1,9 @@
 package com.example.kotlin.chat.controller
 
-import NoRedisUserStatusService
 import com.example.kotlin.chat.service.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.mono
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.messaging.handler.annotation.DestinationVariable
@@ -17,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Controller
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 @Controller
 @MessageMapping("api.v1.messages")
@@ -140,33 +138,51 @@ class MessageResource(
         println("User ID: $userId")
 
         // 사용자를 온라인 상태로 설정
-        userStatusService.setUserOnline(userId, roomId)
+        try {
+            userStatusService.setUserOnline(userId, roomId)
+        } catch (e: Exception) {
+            println("Error setting user online: ${e.message}")
+            close(e) // Flow 종료
+            return@callbackFlow
+        }
 
-        // RSocket 연결이 닫힐 때 오프라인 상태 설정
+        // RSocket 연결 종료 처리
         requester.rsocket()?.onClose()?.doFinally {
             println("onClose triggered for $userId in room $roomId")
 
-            // 오프라인 상태 설정
-            launch {
-                userStatusService.setUserOffline(userId, roomId)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    userStatusService.setUserOffline(userId, roomId)
+                } catch (e: Exception) {
+                    println("Error setting user offline: ${e.message}")
+                } finally {
+                    close()
+                }
             }
-
-            close()  // `callbackFlow` 종료를 요청하여 `awaitClose`를 트리거
         }?.subscribe()
 
-        // 주기적으로 emit하여 연결 유지
-//        while (isActive) {
-//            trySend(Unit)
-//            kotlinx.coroutines.delay(1000L)
-//        }
 
-        // `callbackFlow`가 종료될 때 오프라인 상태 설정 보장
+        // 주기적으로 emit하여 연결 유지
+        while (isActive) {
+            trySend(Unit)
+            kotlinx.coroutines.delay(1000L)
+        }
+
+        // Flow 종료 시 오프라인 상태 설정
         awaitClose {
             println("Disconnecting for $roomId")
-//            launch {
-//                userStatusService.setUserOffline(userId, roomId)
-//            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    userStatusService.setUserOffline(userId, roomId) // 병렬로 실행
+                } catch (e: Exception) {
+                    println("Error during disconnect: ${e.message}")
+                }
+            }
         }
     }
+
+
+
 
 }

@@ -45,7 +45,6 @@ class UserStatusController(
         requester: RSocketRequester,
         @Payload request: PageViewRequest
     ): Mono<Void> {
-        println("connect!!!!!!!!!")
         println(request)
         return Mono.create<Void>  { sink ->
             val connectTimestamp = Instant.now()
@@ -63,7 +62,6 @@ class UserStatusController(
                 logConnection(sessionInfo, disconnectTimestamp)
                 handleUserDisconnection(userId)
                 sessionInfoMap.remove(sessionId)
-                println("disconnect!!!!!!!!!")
 
             }?.subscribe()
 

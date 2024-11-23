@@ -1,6 +1,5 @@
 package com.example.kotlin.chat.config
 
-import NoRedisUserStatusService
 import RedisUserStatusService
 import com.example.kotlin.chat.repository.ChatThreadRepository
 import com.example.kotlin.chat.repository.ParticipantRepository
@@ -56,11 +55,6 @@ class MyServiceFactory {
         return RedisUserStatusService(participantRepository,redisTemplate,stringRedisTemplate,threadListInfoTopic,userLastReadTimeTopic,objectMapper)
     }
 
-    @Bean
-    @Profile("no_redis")
-    fun noRedisUserStatusService(participantRepository: ParticipantRepository): UserStatusService {
-        return NoRedisUserStatusService(participantRepository)
-    }
 
     @Bean("redisMessageTotalUnreadCountService")
     fun redisMessageTotalUnreadCountService(
