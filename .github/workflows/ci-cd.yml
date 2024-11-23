@@ -45,7 +45,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY:  meta_user_24
+        ECR_REPOSITORY:  mop-chat
         IMAGE_TAG:   ${{ env.IMAGE_TAG }}
       run: |
         docker buildx build --platform=linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
