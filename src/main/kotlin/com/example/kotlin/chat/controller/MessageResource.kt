@@ -42,13 +42,8 @@ class MessageResource(
             }
         } ?: throw IllegalArgumentException("userId is missing")
 
-        println("User ID: $userId")
 
-        val parsedRoomId = try {
-            roomId.toLong()
-        } catch (e: NumberFormatException) {
-            println("Room ID is invalid")
-        }
+
 
         val messagesWithUserId = inboundMessages.map { message ->
             message.copy(
@@ -68,17 +63,50 @@ class MessageResource(
             }
 
             // 각 서비스에 공유된 메시지 스트림 전달
-            if (parsedRoomId != null) {
                 launch { messageService.post(sharedFlow) }
                 launch { messageThreadListInfoService.post(sharedFlow) }
                 launch { userLastReadTimeService.post(sharedFlow) }
-            } else {
-                println("Invalid roomId format: Using only messageService")
-                launch { messageService.post(sharedFlow) }
-            }
+
         }
     }
+    @MessageMapping("stream.betting/{roomId}")
+    suspend fun receive2(
+        @Payload inboundMessages: Flow<MessageVM>,
+        @DestinationVariable roomId: String,
+        @AuthenticationPrincipal principal: Jwt
+    ) {
+        val userId = principal.claims["userId"]?.let {
+            when (it) {
+                is String -> it
+                is Int -> it.toString()
+                is Long -> it.toString()
+                else -> throw IllegalArgumentException("Unsupported userId type")
+            }
+        } ?: throw IllegalArgumentException("userId is missing")
 
+        println("User ID: $userId")
+
+        val messagesWithUserId = inboundMessages.map { message ->
+            message.copy(
+                roomId = roomId,
+                user = message.user.copy(id = userId)
+            )
+        }.buffer() // 첫 메시지 보존
+
+        coroutineScope {
+            val sharedFlow = MutableSharedFlow<MessageVM>(replay = 1) // 1개의 메시지 버퍼링
+
+            // 메시지를 buffer에 emit하여 모든 서비스가 수신할 수 있도록 함
+            launch {
+                messagesWithUserId.collect {
+                    sharedFlow.emit(it)
+                }
+            }
+            // 각 서비스에 공유된 메시지 스트림 전달
+                println("Invalid roomId format: Using only messageService")
+                launch { messageService.post(sharedFlow) }
+        }
+    }
     @MessageMapping("stream/{roomId}")
     fun send(@DestinationVariable roomId: String): Flow<MessageVM> = messageService
         .stream(roomId)
