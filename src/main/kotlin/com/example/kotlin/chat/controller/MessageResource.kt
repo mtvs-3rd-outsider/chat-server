@@ -47,9 +47,9 @@ class MessageResource(
         println("User ID: $userId")
 
         val parsedRoomId = try {
-            roomId.toInt()
+            roomId.toLong()
         } catch (e: NumberFormatException) {
-            null
+            println("Room ID is invalid")
         }
 
         val messagesWithUserId = inboundMessages.map { message ->
