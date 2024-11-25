@@ -23,7 +23,8 @@ class MessageResource(
 //    @Qualifier("redisMessageTotalUnreadCountService") val messageUnreadCountService: RealtimeEventService<TotalUnreadMessageCountVM, MessageVM>,
     val userLastReadTimeService: RealtimeEventService<Map<String, UserLastReadTimeVM>, MessageVM>,
     val messageService: MessageService,
-    val userStatusService: UserStatusService
+    val userStatusService: UserStatusService,
+    val notificationService: NotificationService // 알림 서비스 추가
 
 ) {
 
@@ -66,6 +67,12 @@ class MessageResource(
                 launch { messageService.post(sharedFlow) }
                 launch { messageThreadListInfoService.post(sharedFlow) }
                 launch { userLastReadTimeService.post(sharedFlow) }
+            // 알림 서비스 호출
+            launch {
+                sharedFlow.collect { message ->
+                    notificationService.sendNotification(message)
+                }
+            }
 
         }
     }

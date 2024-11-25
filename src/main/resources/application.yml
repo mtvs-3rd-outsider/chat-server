@@ -7,6 +7,25 @@ server:
     key-alias: tomcat
     enabled: ${SSL_ENABLE}
 spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    admin:
+      client-id: admin-client
+    streams:
+      application-id: schema-change-processor
+      properties:
+        processing.guarantee: at_least_once
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 10
+    consumer:
+      group-id: test
+      auto-offset-reset: earliest
+      enable-auto-commit: false  # 수동 커밋 설정
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   reactor:
     debug-agent:
       enabled: true
