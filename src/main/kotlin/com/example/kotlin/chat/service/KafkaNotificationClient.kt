@@ -45,6 +45,7 @@ class NotificationService(
         // 알림 메시지 생성
         val notification = mapOf(
             "senderUserId" to messageVM.user.id,
+            "senderUserName" to messageVM.user.name,
             "content" to messageVM.content,
             "roomId" to messageVM.roomId,
             "sent" to messageVM.sent.toString(),
