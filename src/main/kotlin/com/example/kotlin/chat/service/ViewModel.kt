@@ -83,3 +83,28 @@ data class UserCount(
     val authenticatedUserCount: Int,
     val anonymousUserCount: Int
 )
+
+// DTOs for ChatThreadManagementService
+data class ChatThreadDTO(
+    val chatRoomId: Long?,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
+    val createdAt: LocalDateTime,
+    val lastMessage: String?,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX", timezone = "UTC")
+    val lastMessageTime: Instant?,
+    val isGroupThread: Boolean,
+    val participants: List<SimpleParticipantDTO>
+)
+
+data class CreateChatThreadDTO(
+    val participantIds: List<String>,
+    val isGroupThread: Boolean?
+)
+
+data class CreateChatThreadResponse(
+    val chatRoomId: String
+)
+
+data class SimpleParticipantDTO(
+    val userId: String
+)

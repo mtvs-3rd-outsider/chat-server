@@ -1,94 +1,27 @@
-server:
-  port: 7000
-  ssl:
-    key-store:  ${KEY_STORE_PATH}
-    key-store-password: ${SSL_KEY_STORE_PASSWORD}
-    key-store-type: PKCS12
-    key-alias: tomcat
-    enabled: ${SSL_ENABLE}
 spring:
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    admin:
-      client-id: admin-client
-    streams:
-      application-id: schema-change-processor
-      properties:
-        processing.guarantee: at_least_once
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all
-      retries: 10
-    consumer:
-      group-id: test
-      auto-offset-reset: earliest
-      enable-auto-commit: false  # 수동 커밋 설정
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-  reactor:
-    debug-agent:
-      enabled: true
-  config:
-    import: optional:file:.env[.properties]
-  rsocket:
-    server:
-      transport: websocket
-      mapping-path: ${RSOCKET_MAPPING}
-      ssl:
-        key-store: ${KEY_STORE_PATH}
-        key-store-password: ${SSL_KEY_STORE_PASSWORD}
-        enabled: true
-        key-alias: tomcat
-        key-store-type: PKCS12
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: 6379
-  r2dbc:
-    url: ${DB_USER_URL}
-    username: ${DB_USER_NAME}
-    password: ${DB_USER_PASSWORD}
-
+  application:
+    name: chat-server
   main:
+    web-application-type: reactive
     allow-bean-definition-overriding: true
-jwt:
-  expiration_time: 86400000 #1일
-  secret: ${JWT_SECRET}
+  config:
+    import:
+      - optional:configserver:${CONFIG_SERVER_URI:http://config-server.ugot.svc.cluster.local}
+
 management:
   endpoints:
     web:
       exposure:
-        include: '*' # 모든 엔드포인트를 노출
-  metrics:
-    tags:
-      application: "my-webflux-app"
+        include: "health,info,startup"
   endpoint:
-    prometheus:
-      enabled: true # Prometheus 엔드포인트 활성화
+    startup:
+      enabled: true
+
 logging:
   level:
     root: INFO
     com.example: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-  file:
-    name: logs/app.log
-    org:
-      springframework:
-        r2dbc: DEBUG
-      rsocket: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.messaging.rsocket: DEBUG
-#    org.springframework.security.rsocket: DEBUG  # RSocket Security 전용 디버깅
     io.rsocket: DEBUG
-    r2dbc: TRACE
-#    org.springframework.data.redis: DEBUG  # Spring Data Redis 로깅 레벨
-#    io.lettuce.core: DEBUG                 # Redis 클라이언트 Lettuce의 로깅 레벨
-#    org.springframework.web: DEBUG         # 웹 요청 관련 디버그 (선택 사항)
-#    root: INFO
-#influx:
-#  url: "http://localhost:8087"
-#  token: "your_admin_token"
-#  org: "master-of-prediction"
-#  bucket: "1m_data"
+
+# Server configuration is handled by profiles in backend/config/chat-server/

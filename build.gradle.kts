@@ -1,87 +1,94 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "3.0.3"
-	id("io.spring.dependency-management") version "1.1.0"
-	kotlin("jvm") version "1.7.22"
-	kotlin("plugin.spring") version "1.7.22"
+    id("org.springframework.boot") version "3.5.2"
+    id("io.spring.dependency-management") version "1.1.7"
+    kotlin("jvm") version "1.9.23"
+    kotlin("plugin.spring") version "1.9.23"
 }
 
+val springCloudVersion = "2025.0.0"
+
 group = "com.example.kotlin"
+
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_17
 
+java.sourceCompatibility = JavaVersion.VERSION_21
 
-repositories {
-	mavenCentral()
+repositories { mavenCentral() }
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+    }
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter")
-	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-	implementation("org.springframework.boot:spring-boot-starter-rsocket")
-	implementation("io.r2dbc:r2dbc-h2")
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    implementation("org.springframework.boot:spring-boot-starter-rsocket")
+    implementation("io.r2dbc:r2dbc-h2")
 
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("com.github.javafaker:javafaker:1.0.2")
-// https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
-	implementation("io.asyncer:r2dbc-mysql:1.2.0")
-	implementation("io.github.cdimascio:java-dotenv:5.2.2")
-// https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv
-	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-// https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
-	implementation("com.mysql:mysql-connector-j:8.3.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    // javafaker 제거 - SnakeYAML Android JAR 문제
+    // https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
+    implementation("io.asyncer:r2dbc-mysql:1.2.0")
+    implementation("io.github.cdimascio:java-dotenv:5.2.2")
+    // https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    implementation("com.mysql:mysql-connector-j:8.3.0")
 
-	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("io.micrometer:micrometer-registry-prometheus")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("app.cash.turbine:turbine:0.4.1")
-// https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-resource-server
-//	implementation("org.springframework.security:spring-security-oauth2-resource-server:6.3.4")
-	runtimeOnly("com.h2database:h2")
-	implementation("org.springframework.kafka:spring-kafka")
-	implementation("org.apache.kafka:kafka-clients")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive:3.3.4")
-	implementation("org.jetbrains:markdown:0.2.2")
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-	}
-	// Spring Security와 RSocket 통합
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.security:spring-security-messaging")
-	implementation("org.springframework.security:spring-security-rsocket")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-	// https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose
-	implementation("org.springframework.security:spring-security-oauth2-jose:6.3.3")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("app.cash.turbine:turbine:0.4.1")
+    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-resource-server
+    //	implementation("org.springframework.security:spring-security-oauth2-resource-server:6.3.4")
+    runtimeOnly("com.h2database:h2")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.apache.kafka:kafka-clients")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive:3.3.4")
+    // com.vladsch.flexmark:flexmark-all 제거 - markdown 처리 라이브러리 대신 다른 것 사용
+    implementation("org.jetbrains:markdown:0.2.2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+    }
+    // Spring Security와 RSocket 통합
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.security:spring-security-messaging")
+    implementation("org.springframework.security:spring-security-rsocket")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose
+    implementation("org.springframework.security:spring-security-oauth2-jose:6.3.3")
 
-	// JWT를 사용하려면 다음 의존성 추가
-	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리
-	// https://mvnrepository.com/artifact/io.projectreactor/reactor-tools
-	implementation("io.projectreactor:reactor-tools:3.6.11")
-	implementation("io.micrometer:micrometer-registry-prometheus")
+    // JWT를 사용하려면 다음 의존성 추가
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리
+    // https://mvnrepository.com/artifact/io.projectreactor/reactor-tools
+    // implementation("io.projectreactor:reactor-tools:3.6.11") // 제거 - Reactor Debug Agent 초기화 실패
+    implementation("io.micrometer:micrometer-registry-prometheus")
 
-	// 로깅
-	implementation("ch.qos.logback:logback-classic")
-	implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+    // 로깅
+    implementation("ch.qos.logback:logback-classic")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 }
 
-tasks.withType<Test> {
-	useJUnitPlatform()
-}
+tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "17"
-	}
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "21"
+    }
 }
