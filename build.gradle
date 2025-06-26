@@ -15,15 +15,21 @@ repositories {
     mavenCentral()
 }
 
+// Force JVM platform for all dependencies
+configurations.all {
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+    }
+}
+
 configurations.all {
     resolutionStrategy {
-        eachDependency {
-            if (it.requested.group == 'org.yaml' && it.requested.name == 'snakeyaml') {
-                it.useVersion '2.3'
-                it.because 'SnakeYAML 2.4 has Android JAR resolution issues'
-            }
-        }
+        // Force all transitive SnakeYAML dependencies to use 1.33
+        force 'org.yaml:snakeyaml:1.33'
     }
+    exclude group: 'org.yaml', module: 'snakeyaml'
 }
 
 dependencyManagement {
@@ -33,10 +39,11 @@ dependencyManagement {
 }
 
 dependencies {
+    // Explicitly add SnakeYAML first to ensure correct version
+    implementation 'org.yaml:snakeyaml:1.33'
     implementation('org.springframework.cloud:spring-cloud-starter-config') {
         exclude group: 'org.yaml', module: 'snakeyaml'
     }
-    implementation 'org.yaml:snakeyaml:2.3'
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
