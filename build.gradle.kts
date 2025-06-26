@@ -23,14 +23,22 @@ dependencyManagement {
     }
 }
 
-dependencies {
-    // Force SnakeYAML JVM version to avoid Android JAR issues
-    implementation("org.yaml:snakeyaml:2.4") {
-        attributes {
-            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            if (requested.group == "org.yaml" && requested.name == "snakeyaml") {
+                useVersion "2.3"
+                because "SnakeYAML 2.4 has Android JAR resolution issues"
+            }
         }
     }
-    implementation("org.springframework.cloud:spring-cloud-starter-config")
+}
+
+dependencies {
+    implementation("org.springframework.cloud:spring-cloud-starter-config") {
+        exclude(group = "org.yaml", module = "snakeyaml")
+    }
+    implementation("org.yaml:snakeyaml:2.3")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
