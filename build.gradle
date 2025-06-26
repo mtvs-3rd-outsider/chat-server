@@ -1,11 +1,13 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.2'
+    id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.jvm' version '1.9.23'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
 }
 
-def springCloudVersion = "2025.0.0"
+import org.gradle.api.attributes.java.TargetJvmVersion
+
+def springCloudVersion = "2023.0.3"
 
 group = 'com.example.kotlin'
 version = '0.0.1-SNAPSHOT'
@@ -21,16 +23,19 @@ configurations.all {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+    }
+    resolutionStrategy {
+        eachDependency { details ->
+            if (details.requested.group == 'org.yaml' && details.requested.name == 'snakeyaml') {
+                details.useVersion '1.33'
+                details.because 'Use compatible SnakeYAML version'
+            }
+        }
     }
 }
 
-configurations.all {
-    resolutionStrategy {
-        // Force all transitive SnakeYAML dependencies to use 1.33
-        force 'org.yaml:snakeyaml:1.33'
-    }
-    exclude group: 'org.yaml', module: 'snakeyaml'
-}
+// Let Spring Boot manage the SnakeYAML version automatically
 
 dependencyManagement {
     imports {
@@ -39,11 +44,8 @@ dependencyManagement {
 }
 
 dependencies {
-    // Explicitly add SnakeYAML first to ensure correct version
-    implementation 'org.yaml:snakeyaml:1.33'
-    implementation('org.springframework.cloud:spring-cloud-starter-config') {
-        exclude group: 'org.yaml', module: 'snakeyaml'
-    }
+    // SnakeYAML is managed by Spring Boot BOM
+    // implementation('org.springframework.cloud:spring-cloud-starter-config') // Temporarily disabled for compilation
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
@@ -71,6 +73,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'app.cash.turbine:turbine:0.4.1'
+    // SnakeYAML test dependency is managed by Spring Boot BOM
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-resource-server
     //	implementation 'org.springframework.security:spring-security-oauth2-resource-server:6.3.4'
     runtimeOnly 'com.h2database:h2'
@@ -80,6 +83,7 @@ dependencies {
     implementation 'org.jetbrains:markdown:0.2.2'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-config'
     }
     // Spring Security와 RSocket 통합
     implementation 'org.springframework.boot:spring-boot-starter-security'

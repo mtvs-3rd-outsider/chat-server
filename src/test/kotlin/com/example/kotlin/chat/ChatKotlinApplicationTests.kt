@@ -25,16 +25,15 @@ import org.springframework.messaging.rsocket.RSocketRequester
 import org.springframework.messaging.rsocket.dataWithType
 import org.springframework.messaging.rsocket.retrieveFlow
 import java.net.URI
-import java.net.URL
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
 import kotlin.time.ExperimentalTime
-import kotlin.time.seconds
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
-        "spring.r2dbc.url=r2dbc:h2:mem:///testdb;USER=sa;PASSWORD=password"
+        "spring.r2dbc.url=r2dbc:h2:mem:///testdb;USER=sa;PASSWORD=password",
+        "spring.config.location=classpath:application.properties"
     ]
 )
 class ChatKotlinApplicationTests(
@@ -56,28 +55,40 @@ class ChatKotlinApplicationTests(
                 listOf(
                     Message(
                         "*testMessage*",
-                        ContentType.PLAIN,
+                        ContentType.PLAIN.name.lowercase(),
                         twoSecondBeforeNow,
                         "test",
-                        "http://test.com"
+                        "http://test.com",
+                        null,
+                        null,
+                        null,
+                        null
                     ),
                     Message(
                         "**testMessage2**",
-                        ContentType.MARKDOWN,
+                        ContentType.MARKDOWN.name.lowercase(),
                         secondBeforeNow,
                         "test1",
-                        "http://test.com"
+                        "http://test.com",
+                        null,
+                        null,
+                        null,
+                        null
                     ),
                     Message(
                         "`testMessage3`",
-                        ContentType.MARKDOWN,
+                        ContentType.MARKDOWN.name.lowercase(),
                         now,
                         "test2",
-                        "http://test.com"
+                        "http://test.com",
+                        null,
+                        null,
+                        null,
+                        null
                     )
                 )
             ).toList()
-            lastMessageId = savedMessages.first().id ?: ""
+            lastMessageId = savedMessages.first().id?.toString() ?: ""
         }
     }
 
@@ -103,8 +114,14 @@ class ChatKotlinApplicationTests(
                         .isEqualTo(
                             MessageVM(
                                 "*testMessage*",
-                                UserVM("test", URL("http://test.com")),
-                                now.minusSeconds(2).truncatedTo(MILLIS)
+                                UserVM("test", "test", "http://test.com", "test"),
+                                now.minusSeconds(2).truncatedTo(MILLIS),
+                                "",
+                                null,
+                                null,
+                                null,
+                                "",
+                                null
                             )
                         )
 
@@ -112,16 +129,28 @@ class ChatKotlinApplicationTests(
                         .isEqualTo(
                             MessageVM(
                                 "<body><p><strong>testMessage2</strong></p></body>",
-                                UserVM("test1", URL("http://test.com")),
-                                now.minusSeconds(1).truncatedTo(MILLIS)
+                                UserVM("test1", "test1", "http://test.com", "test1"),
+                                now.minusSeconds(1).truncatedTo(MILLIS),
+                                "",
+                                null,
+                                null,
+                                null,
+                                "",
+                                null
                             )
                         )
                     assertThat(expectItem().prepareForTesting())
                         .isEqualTo(
                             MessageVM(
                                 "<body><p><code>testMessage3</code></p></body>",
-                                UserVM("test2", URL("http://test.com")),
-                                now.truncatedTo(MILLIS)
+                                UserVM("test2", "test2", "http://test.com", "test2"),
+                                now.truncatedTo(MILLIS),
+                                "",
+                                null,
+                                null,
+                                null,
+                                "",
+                                null
                             )
                         )
 
@@ -133,8 +162,14 @@ class ChatKotlinApplicationTests(
                                 emit(
                                     MessageVM(
                                         "`HelloWorld`",
-                                        UserVM("test", URL("http://test.com")),
-                                        now.plusSeconds(1)
+                                        UserVM("test", "test", "http://test.com", "test"),
+                                        now.plusSeconds(1),
+                                        "",
+                                        null,
+                                        null,
+                                        null,
+                                        "",
+                                        null
                                     )
                                 )
                             })
@@ -146,8 +181,14 @@ class ChatKotlinApplicationTests(
                         .isEqualTo(
                             MessageVM(
                                 "<body><p><code>HelloWorld</code></p></body>",
-                                UserVM("test", URL("http://test.com")),
-                                now.plusSeconds(1).truncatedTo(MILLIS)
+                                UserVM("test", "test", "http://test.com", "test"),
+                                now.plusSeconds(1).truncatedTo(MILLIS),
+                                "",
+                                null,
+                                null,
+                                null,
+                                "",
+                                null
                             )
                         )
 
@@ -168,8 +209,14 @@ class ChatKotlinApplicationTests(
                         emit(
                             MessageVM(
                                 "`HelloWorld`",
-                                UserVM("test", URL("http://test.com")),
-                                now.plusSeconds(1)
+                                UserVM("test", "test", "http://test.com", "test"),
+                                now.plusSeconds(1),
+                                "",
+                                null,
+                                null,
+                                null,
+                                "",
+                                null
                             )
                         )
                     })
@@ -177,7 +224,7 @@ class ChatKotlinApplicationTests(
                     .collect()
             }
 
-            delay(2.seconds)
+            delay(2000)
 
             messageRepository.findAll()
                 .first { it.content.contains("HelloWorld") }
@@ -186,10 +233,14 @@ class ChatKotlinApplicationTests(
                         .isEqualTo(
                             Message(
                                 "`HelloWorld`",
-                                ContentType.MARKDOWN,
+                                ContentType.MARKDOWN.name.lowercase(),
                                 now.plusSeconds(1).truncatedTo(MILLIS),
                                 "test",
-                                "http://test.com"
+                                "http://test.com",
+                                null,
+                                null,
+                                null,
+                                null
                             )
                         )
                 }
