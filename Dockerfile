@@ -15,8 +15,8 @@ COPY gradle gradle
 COPY gradlew ./
 
 # 모든 Gradle 설정 파일들을 명시적으로 복사
-COPY build.gradle.kts ./
-COPY settings.gradle.kts ./
+COPY build.gradle ./
+COPY settings.gradle ./
 
 # 의존성만 먼저 다운로드 (가장 시간이 오래 걸리지만 변경이 적음)
 RUN --mount=type=cache,target=/root/.gradle/caches \
