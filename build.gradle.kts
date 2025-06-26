@@ -7,7 +7,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.23"
 }
 
-val springCloudVersion = "2024.0.0"
+val springCloudVersion = "2025.0.0"
 
 group = "com.example.kotlin"
 
@@ -24,8 +24,12 @@ dependencyManagement {
 }
 
 dependencies {
-    // Force SnakeYAML version to avoid Android JAR issues
-    implementation("org.yaml:snakeyaml:2.3")
+    // Force SnakeYAML JVM version to avoid Android JAR issues
+    implementation("org.yaml:snakeyaml:2.4") {
+        attributes {
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+        }
+    }
     implementation("org.springframework.cloud:spring-cloud-starter-config")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
