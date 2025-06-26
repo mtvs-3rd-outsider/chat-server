@@ -27,8 +27,8 @@ configurations.all {
     resolutionStrategy {
         eachDependency {
             if (requested.group == "org.yaml" && requested.name == "snakeyaml") {
-                useVersion "2.3"
-                because "SnakeYAML 2.4 has Android JAR resolution issues"
+                useVersion("2.3")
+                because("SnakeYAML 2.4 has Android JAR resolution issues")
             }
         }
     }
