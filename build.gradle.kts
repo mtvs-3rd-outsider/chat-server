@@ -70,6 +70,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose
     implementation("org.springframework.security:spring-security-oauth2-jose:6.3.3")
+    // Nimbus OAuth2 SDK for token introspection
+    implementation("com.nimbusds:oauth2-oidc-sdk:11.18")
 
     // JWT를 사용하려면 다음 의존성 추가
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

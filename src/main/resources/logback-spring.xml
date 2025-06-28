@@ -1,34 +1,16 @@
 <!-- src/main/resources/logback-spring.xml -->
 <configuration>
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <!-- Logstash 인코더에 필요한 추가 설정 -->
-            <providers>
-                <timestamp>
-                    <timeZone>UTC</timeZone>
-                </timestamp>
-                <loggerName/>
-                <pattern>
-                    <pattern>
-                        {
-                        "level": "%level",
-                        "thread": "%thread",
-                        "message": "%message",
-                        "context": "%contextName",
-                        "caller": "%caller"
-                        }
-                    </pattern>
-                </pattern>
-            </providers>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="FILE" />
+        <appender-ref ref="CONSOLE" />
     </root>
+    
+    <logger name="com.example.kotlin.chat" level="DEBUG"/>
+    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.security.oauth2" level="DEBUG"/>
 </configuration>

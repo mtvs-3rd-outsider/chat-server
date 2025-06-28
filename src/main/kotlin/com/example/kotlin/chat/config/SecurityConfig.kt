@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.server.resource.introspection.Reactiv
 import org.springframework.security.oauth2.server.resource.introspection.NimbusReactiveOpaqueTokenIntrospector
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager
 import org.springframework.security.rsocket.core.PayloadSocketAcceptorInterceptor
 import org.springframework.security.web.server.SecurityWebFilterChain
 
@@ -56,8 +57,10 @@ class SecurityConfig(
                 .setup().permitAll()
                 .anyRequest().authenticated()
                 .anyExchange().authenticated()
-        } // all connections, exchanges.
-            .jwt(withDefaults()) // RSocket은 아직 JWT 사용
+        }
+            .jwt { jwt ->
+                jwt.authenticationManager(JwtReactiveAuthenticationManager(reactiveJwtDecoder()))
+            }
         return security.build()
     }
 
