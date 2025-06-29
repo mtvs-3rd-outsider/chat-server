@@ -19,6 +19,10 @@ import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager
 import org.springframework.security.rsocket.core.PayloadSocketAcceptorInterceptor
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import reactor.core.publisher.Mono
+import org.slf4j.LoggerFactory
 
 
 @Configuration
@@ -34,6 +38,9 @@ class SecurityConfig(
     @Value("\${security.oauth2.jwt.jwk-set-uri:http://authserver.ugot.svc.cluster.local:80/oauth2/jwks}")
     private val jwkSetUri: String
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(SecurityConfig::class.java)
+    }
     @Bean
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         http
@@ -41,9 +48,38 @@ class SecurityConfig(
                 it.pathMatchers("/actuator/**").permitAll()  // Actuator 경로만 허용
                     .anyExchange().authenticated()          // 나머지 요청은 인증 필요
             }
-            .csrf().disable() // 필요에 따라 CSRF 비활성화
+            .csrf { it.disable() } // 필요에 따라 CSRF 비활성화
             .oauth2ResourceServer { oauth2 ->
                 oauth2.authenticationManagerResolver(jwtOrOpaqueAuthenticationManagerResolver())
+                    .authenticationEntryPoint { exchange, ex ->
+                        logger.error("Authentication failed: ${ex.message}")
+                        val response = exchange.response
+                        response.statusCode = org.springframework.http.HttpStatus.UNAUTHORIZED
+                        response.headers.add("Content-Type", "application/json")
+                        val body = """{"error": "unauthorized", "message": "${ex.message}"}"""
+                        val buffer = response.bufferFactory().wrap(body.toByteArray())
+                        response.writeWith(reactor.core.publisher.Mono.just(buffer))
+                    }
+                    .accessDeniedHandler { exchange, denied ->
+                        logger.error("Access denied: ${denied.message}")
+                        val response = exchange.response
+                        response.statusCode = org.springframework.http.HttpStatus.FORBIDDEN
+                        response.headers.add("Content-Type", "application/json")
+                        val body = """{"error": "access_denied", "message": "${denied.message}"}"""
+                        val buffer = response.bufferFactory().wrap(body.toByteArray())
+                        response.writeWith(reactor.core.publisher.Mono.just(buffer))
+                    }
+            }
+            .exceptionHandling { exceptions ->
+                exceptions.authenticationEntryPoint { exchange, ex ->
+                    logger.error("Authentication required: ${ex.message}")
+                    val response = exchange.response
+                    response.statusCode = org.springframework.http.HttpStatus.UNAUTHORIZED
+                    response.headers.add("Content-Type", "application/json")
+                    val body = """{"error": "authentication_required", "message": "Authentication is required to access this resource"}"""
+                    val buffer = response.bufferFactory().wrap(body.toByteArray())
+                    response.writeWith(reactor.core.publisher.Mono.just(buffer))
+                }
             }
         return http.build()
     }
